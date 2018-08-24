@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xmlns='http://www.ehcache.org/v3'
+    xmlns:jsr107='http://www.ehcache.org/v3/jsr107'
+    xsi:schemaLocation="
+        http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd
+        http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.0.xsd">
+   
+  <service>
+    <jsr107:defaults enable-management="false" enable-statistics="false"/>
+  </service>
+
+  <cache-template name="default">
+    <expiry>
+      <ttl unit="seconds">1800</ttl>
+    </expiry>
+    <resources>
+      <heap unit="entries">1000</heap>
+    </resources>
+  </cache-template>
+
+  <!-- ### Component Method ### -->
+
+  <!-- AppSettingHandler -->
+  <cache alias="AppSettingHandler.appSetting" uses-template="default"> 
+    <expiry>
+      <ttl unit="seconds">30</ttl>
+    </expiry>
+    <heap unit="entries">1000</heap>
+  </cache>
+
+  <!-- HolidayMasterAccessor -->
+  <cache alias="HolidayAccessor.getHoliday" uses-template="default" />
+
+  <!-- ### Service Method ### -->
+
+  <!-- AccountService -->
+  <cache alias="AccountService.getAccount" uses-template="default" />
+  <cache alias="AccountService.getLoginByLoginId" uses-template="default" />
+
+  <!-- MasterAdminService -->
+  <cache alias="MasterAdminService.getStaff" uses-template="default">
+    <heap unit="entries">100</heap>
+  </cache>
+  <cache alias="MasterAdminService.findStaffAuthority" uses-template="default">
+    <heap unit="entries">10000</heap>
+  </cache>
+</config>

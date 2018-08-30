@@ -9,7 +9,6 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 
-
 /**
  * 口座に紐づく金融機関口座を表現します。
  *
@@ -17,25 +16,25 @@ import javax.persistence.Id
  * low: サンプルなので支店や名称、名義といった本来必須な情報をかなり省略しています。(通常は全銀仕様を踏襲します)
  */
 @Entity
-class FiAccount(
+data class FiAccount(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 口座ID  */
-        @IdStr
+        @field:IdStr
         val accountId: String,
         /** 利用用途カテゴリ  */
-        @Category
+        @field:Category
         val category: String,
         /** 通貨  */
-        @Currency
+        @field:Currency
         val currency: String,
         /** 金融機関コード  */
-        @IdStr
+        @field:IdStr
         val fiCode: String,
         /** 金融機関口座ID  */
-        @IdStr
+        @field:IdStr
         val fiAccountId: String
 ) : OrmActiveRecord<FiAccount>() {
     companion object {

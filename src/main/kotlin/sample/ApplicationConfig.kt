@@ -1,6 +1,8 @@
 package sample
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.springframework.boot.actuate.health.AbstractHealthIndicator
 import org.springframework.boot.actuate.health.Health
 import org.springframework.boot.actuate.health.HealthIndicator
@@ -19,14 +21,17 @@ import sample.context.audit.AuditHandler
 import sample.context.audit.AuditPersister
 import sample.context.lock.IdLockHandler
 import sample.context.mail.MailHandler
+import sample.context.orm.DefaultRepository
 import sample.context.orm.SystemRepository
 import sample.context.report.ReportHandler
 import sample.model.BusinessDayHandler
 import sample.model.DataFixtures
+import sample.model.HolidayAccessor
 
 /**
  * アプリケーションにおけるBean定義を表現します。
- * <p>クラス側でコンポーネント定義していない時はこちらで明示的に記載してください。
+ * <p>controller / usecase 以外のコンポーネントはこちらで明示的に定義しています。
+ * <p>依存コンポーネントが多いものについては Import を併用しています。
  */
 @Configuration
 class ApplicationConfig {
@@ -68,6 +73,10 @@ class ApplicationConfig {
     @Configuration
     @Import(BusinessDayHandler::class, DataFixtures::class)
     internal class DomainConfig {
+
+        @Bean
+        fun holidayAccessor(rep: DefaultRepository): HolidayAccessor =
+                HolidayAccessor(rep)
     }
 
     @Configuration
@@ -75,8 +84,12 @@ class ApplicationConfig {
 
         /** HibernateのLazyLoading回避対応。  see JacksonAutoConfiguration  */
         @Bean
-        fun jsonHibernate5Module(): Hibernate5Module {
-            return Hibernate5Module()
+        fun jsonHibernate5Module(): Hibernate5Module = Hibernate5Module()
+
+        @Bean
+        fun javaTimeModule(mapper: ObjectMapper): JavaTimeModule {
+            val modules = mapper.findAndRegisterModules()
+            return JavaTimeModule()
         }
 
         /** BeanValidationメッセージのUTF-8に対応したValidator。  */

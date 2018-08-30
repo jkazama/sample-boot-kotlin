@@ -2,9 +2,9 @@ package sample.context.report.csv
 
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
-import java.util.ArrayList
 import sample.InvocationException
 import java.io.*
+import java.util.*
 
 
 /**
@@ -40,9 +40,7 @@ class CsvWriter(val file: File?, val out: OutputStream?, val layout: CsvLayout =
 
     private fun closeQuietly(closeable: Closeable?) {
         try {
-            if (closeable != null) {
-                closeable.close()
-            }
+            closeable?.close()
         } catch (ioe: IOException) {
         }
 
@@ -76,6 +74,7 @@ class CsvWriter(val file: File?, val out: OutputStream?, val layout: CsvLayout =
     companion object {
         fun of(file: File, layout: CsvLayout = CsvLayout()): CsvWriter =
                 CsvWriter(file, null, layout)
+
         fun of(out: OutputStream, layout: CsvLayout = CsvLayout()): CsvWriter =
                 CsvWriter(null, out, layout)
     }

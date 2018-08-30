@@ -1,5 +1,6 @@
 package sample.model.asset
 
+import org.springframework.format.annotation.DateTimeFormat
 import sample.ActionStatusType
 import sample.ErrorKeys
 import sample.context.Dto
@@ -21,50 +22,55 @@ import javax.validation.constraints.NotNull
  * low: 検索関連は主に経理確認や帳票等での利用を想定します
  */
 @Entity
-class Cashflow(
+data class Cashflow(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 口座ID  */
-        @IdStr
+        @field:IdStr
         val accountId: String,
         /** 通貨  */
-        @Currency
+        @field:Currency
         val currency: String,
         /** 金額  */
-        @Amount
+        @field:Amount
         val amount: BigDecimal,
         /** 入出金  */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         val cashflowType: CashflowType,
         /** 摘要  */
-        @Category
+        @field:Category
         val remark: String,
         /** 発生日/日時  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val eventDay: LocalDate,
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         val eventDate: LocalDateTime,
         /** 受渡日  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val valueDay: LocalDate,
         /** 処理種別  */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         var statusType: ActionStatusType,
         /** 登録日時  */
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         override var createDate: LocalDateTime? = null,
         /** 登録者ID  */
-        @IdStr
+        @field:IdStr
         override var createId: String? = null,
         /** 更新日時  */
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         override var updateDate: LocalDateTime? = null,
         /** 更新者ID  */
-        @IdStr
+        @field:IdStr
         override var updateId: String? = null
 ) : OrmActiveMetaRecord<Cashflow>() {
 
@@ -88,7 +94,9 @@ class Cashflow(
      * low: 実際はエラー事由などを引数に取って保持する
      */
     fun error(rep: OrmRepository): Cashflow {
-        validate { v -> v.verify(statusType.isUnprocessed, ErrorKeys.ActionUnprocessing) }
+        validate { v ->
+            v.verify(statusType.isUnprocessed, ErrorKeys.ActionUnprocessing)
+        }
 
         this.statusType = ActionStatusType.Error
         return update(rep)
@@ -102,8 +110,8 @@ class Cashflow(
         private const val serialVersionUID = 1L
 
         /** キャッシュフローを取得します。(例外付)  */
-        fun load(rep: OrmRepository, id: Long?): Cashflow =
-                rep.load(Cashflow::class.java, id!!)
+        fun load(rep: OrmRepository, id: Long): Cashflow =
+                rep.load(Cashflow::class.java, id)
 
         /**
          * 指定受渡日時点で未実現のキャッシュフロー一覧を検索します。(口座通貨別)
@@ -126,10 +134,10 @@ class Cashflow(
          */
         fun register(rep: OrmRepository, p: RegCashflow): Cashflow {
             val now = rep.dh().time.tp()
-            Validator.validate({ v ->
-                v.checkField(now.beforeEqualsDay(p.valueDay),
+            Validator.validate { v ->
+                v.checkField(now.beforeEqualsDay(p.valueDay!!),
                         "valueDay", AssetErrorKeys.CashflowBeforeEqualsDay)
-            })
+            }
             val cf = p.create(now).save(rep)
             rep.flush() // ID発行保証
             return if (cf.canRealize(rep)) cf.realize(rep) else cf
@@ -152,33 +160,34 @@ enum class CashflowType {
 
 /** 入出金キャッシュフローの登録パラメタ。   */
 data class RegCashflow(
-        @IdStr
-        val accountId: String,
-        @Currency
-        val currency: String,
-        @Amount
-        val amount: BigDecimal,
-        @NotNull
-        val cashflowType: CashflowType,
-        @Category
-        val remark: String,
+        @field:IdStr
+        val accountId: String? = null,
+        @field:Currency
+        val currency: String? = null,
+        @field:Amount
+        val amount: BigDecimal? = null,
+        @field:NotNull
+        val cashflowType: CashflowType? = null,
+        @field:Category
+        val remark: String? = null,
         /** 未設定時は営業日を設定  */
-        @ISODateEmpty
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val eventDay: LocalDate? = null,
-        @ISODate
-        val valueDay: LocalDate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val valueDay: LocalDate? = null
 ) : Dto {
     fun create(now: TimePoint): Cashflow {
         val eventDate = if (eventDay == null) now else TimePoint(eventDay, now.date)
         return Cashflow(
-                accountId = accountId,
-                currency = currency,
-                amount = amount,
-                cashflowType = cashflowType,
-                remark = remark,
+                accountId = accountId!!,
+                currency = currency!!,
+                amount = amount!!,
+                cashflowType = cashflowType!!,
+                remark = remark!!,
                 eventDay = eventDate.day,
                 eventDate = eventDate.date,
-                valueDay = valueDay,
+                valueDay = valueDay!!,
                 statusType = ActionStatusType.Unprocessed
         )
     }

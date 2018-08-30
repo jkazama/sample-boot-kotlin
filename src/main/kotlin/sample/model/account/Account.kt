@@ -26,19 +26,19 @@ import javax.validation.constraints.NotNull
  * low: サンプル用に必要最低限の項目だけ
  */
 @Entity
-class Account(
+data class Account(
         /** 口座ID  */
         @Id
-        @IdStr
+        @field:IdStr
         var id: String? = null,
         /** 口座名義  */
-        @Name
+        @field:Name
         var name: String,
         /** メールアドレス  */
-        @Email
+        @field:Email
         var mail: String,
         /** 口座状態  */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         var statusType: AccountStatusType
 ) : OrmActiveRecord<Account>() {
@@ -63,7 +63,7 @@ class Account(
 
         /** 有効な口座を取得します。  */
         fun getValid(rep: OrmRepository, id: String): Optional<Account> =
-                get(rep, id).filter({ acc -> acc.statusType.valid() })
+                get(rep, id).filter { acc -> acc.statusType.valid() }
 
         /** 口座を取得します。(例外付)  */
         fun load(rep: OrmRepository, id: String): Account =
@@ -71,7 +71,7 @@ class Account(
 
         /** 有効な口座を取得します。(例外付)  */
         fun loadValid(rep: OrmRepository, id: String): Account =
-                getValid(rep, id).orElseThrow({ ValidationException("error.Account.loadValid") })
+                getValid(rep, id).orElseThrow { ValidationException("error.Account.loadValid") }
 
         /**
          * 口座の登録を行います。
@@ -79,7 +79,9 @@ class Account(
          * ログイン情報も同時に登録されます。
          */
         fun register(rep: OrmRepository, encoder: PasswordEncoder, p: RegAccount): Account {
-            Validator.validate({ v -> v.checkField(!get(rep, p.id).isPresent(), "id", ErrorKeys.DuplicateId) })
+            Validator.validate { v ->
+                v.checkField(!get(rep, p.id).isPresent(), "id", ErrorKeys.DuplicateId)
+            }
             p.createLogin(encoder.encode(p.plainPassword)).save(rep)
             return p.create().save(rep)
         }
@@ -99,42 +101,40 @@ enum class AccountStatusType {
 
 /** 登録パラメタ  */
 data class RegAccount(
-        @IdStr
-        val id: String,
-        @Name
-        val name: String,
-        @Email
-        val mail: String,
+        @field:IdStr
+        val id: String? = null,
+        @field:Name
+        val name: String? = null,
+        @field:Email
+        val mail: String? = null,
         /** パスワード(未ハッシュ)  */
-        @Password
-        val plainPassword: String
+        @field:Password
+        val plainPassword: String? = null
 ) : Dto {
-    fun create(): Account =
-            Account(
-                    id = id,
-                    name = name,
-                    mail = mail,
-                    statusType = AccountStatusType.Normal
-            )
+    fun create(): Account = Account(
+            id = id,
+            name = name!!,
+            mail = mail!!,
+            statusType = AccountStatusType.Normal
+    )
 
-    fun createLogin(password: String): Login =
-            Login(
-                    id = id,
-                    loginId = id,
-                    password = password
-            )
+    fun createLogin(password: String): Login = Login(
+            id = id,
+            loginId = id!!,
+            password = password
+    )
 }
 
 /** 変更パラメタ  */
 data class ChgAccount(
-        @Name
-        val name: String,
-        @Email
-        val mail: String
+        @field:Name
+        val name: String? = null,
+        @field:Email
+        val mail: String? = null
 ) : Dto {
     fun bind(m: Account): Account {
-        m.name = name
-        m.mail = mail
+        m.name = name!!
+        m.mail = mail!!
         return m
     }
 }

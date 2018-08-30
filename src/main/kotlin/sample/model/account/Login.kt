@@ -16,23 +16,25 @@ import javax.persistence.Id
  * low: サンプル用に必要最低限の項目だけ
  */
 @Entity
-class Login(
+data class Login(
         /** 口座ID  */
         @Id
-        @IdStr
+        @field:IdStr
         var id: String? = null,
         /** ログインID  */
-        @IdStr
+        @field:IdStr
         var loginId: String,
         /** パスワード(暗号化済)  */
-        @Password
+        @field:Password
         var password: String
 ) : OrmActiveRecord<Login>() {
 
     /** ログインIDを変更します。  */
     fun change(rep: OrmRepository, p: ChgLoginId): Login {
-        val exists = rep.tmpl().get<Login>("FROM Login l WHERE l.id<>?1 AND l.loginId=?2", id!!, p.loginId).isPresent
-        validate { v -> v.checkField(!exists, "loginId", ErrorKeys.DuplicateId) }
+        validate { v ->
+            val exists = rep.tmpl().get<Login>("FROM Login l WHERE l.id<>?1 AND l.loginId=?2", id!!, p.loginId!!).isPresent
+            v.checkField(!exists, "loginId", ErrorKeys.DuplicateId)
+        }
         return p.bind(this).update(rep)
     }
 
@@ -61,10 +63,10 @@ class Login(
 /** ログインID変更パラメタ low: 基本はユースケース単位で切り出す  */
 data class ChgLoginId(
         @IdStr
-        val loginId: String
+        val loginId: String? = null
 ) : Dto {
     fun bind(m: Login): Login {
-        m.loginId = loginId
+        m.loginId = loginId!!
         return m
     }
 }
@@ -72,7 +74,7 @@ data class ChgLoginId(
 /** パスワード変更パラメタ  */
 data class ChgPassword(
         @Password
-        val plainPassword: String
+        val plainPassword: String? = null
 ) : Dto {
     fun bind(m: Login, password: String): Login {
         m.password = password

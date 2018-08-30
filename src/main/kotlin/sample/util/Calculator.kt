@@ -18,15 +18,16 @@ class Calculator {
     private var roundingAlways: Boolean = false
 
     /** 計算結果をint型で返します。 */
-    val intValue: Int = decimal.toInt()
+    fun intValue(): Int = decimal().toInt()
+
     /** 計算結果をlong型で返します。 */
-    val longValue: Long = decimal.toLong()
+    fun longValue(): Long = decimal().toLong()
+
     /** 計算結果をBigDecimal型で返します。 */
-    val decimal: BigDecimal
-        get() {
-            val v = value.get()
-            return if (v != null) v.setScale(scale, mode) else BigDecimal.ZERO
-        }
+    fun decimal(): BigDecimal {
+        val v = value.get()
+        return if (v != null) v.setScale(scale, mode) else BigDecimal.ZERO
+    }
 
     private constructor(v: Number) {
         try {
@@ -46,7 +47,7 @@ class Calculator {
      * @return 自身のインスタンス
      */
     fun scale(scale: Int): Calculator =
-        scale(scale, RoundingMode.DOWN)
+            scale(scale, RoundingMode.DOWN)
 
     /**
      * 計算前処理定義。
@@ -84,7 +85,7 @@ class Calculator {
     }
 
     private fun rounding(v: BigDecimal): BigDecimal =
-        if (roundingAlways) v.setScale(scale, mode) else v
+            if (roundingAlways) v.setScale(scale, mode) else v
 
     /** 自身が保持する値へ与えた計算値を引きます。 */
     fun subtract(v: Number): Calculator {
@@ -140,22 +141,19 @@ class Calculator {
         const val defaultScale: Int = 18
 
         /** 開始値0で初期化されたCalculator  */
-        fun init(): Calculator =
-            Calculator(BigDecimal.ZERO)
+        fun init(): Calculator = Calculator(BigDecimal.ZERO)
 
         /**
          * @param v 初期値
          * @return 初期化されたCalculator
          */
-        fun of(v: Number): Calculator =
-            Calculator(v)
+        fun of(v: Number): Calculator = Calculator(v)
 
         /**
          * @param v 初期値
          * @return 初期化されたCalculator
          */
-        fun of(v: BigDecimal): Calculator =
-            Calculator(v)
+        fun of(v: BigDecimal): Calculator = Calculator(v)
 
     }
 

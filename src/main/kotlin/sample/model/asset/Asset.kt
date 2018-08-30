@@ -6,13 +6,12 @@ import java.time.LocalDate
 import sample.context.orm.OrmRepository
 import java.math.BigDecimal
 
-
 /**
  * 口座の資産概念を表現します。
  * asset配下のEntityを横断的に取り扱います。
  * low: 実際の開発では多通貨や執行中/拘束中のキャッシュフローアクションに対する考慮で、サービスによってはかなり複雑になります。
  */
-class Asset(val id: String) {
+data class Asset(val id: String) {
     /**
      * 振込出金可能か判定します。
      *
@@ -25,6 +24,6 @@ class Asset(val id: String) {
         CashInOut.findUnprocessed(rep, id, currency, true).stream()
                 .forEach { calc.add(it.absAmount.negate()) }
         calc.add(absAmount.negate())
-        return 0 <= calc.decimal.signum()
+        return 0 <= calc.decimal().signum()
     }
 }

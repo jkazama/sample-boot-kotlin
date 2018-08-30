@@ -14,7 +14,7 @@ class MockDomainHelper(
         val mockClock: Clock = Clock.systemDefaultZone(),
         val settingMap: MutableMap<String, String> = mutableMapOf()
 ) : DomainHelper(
-        ActorSession(), Timestamper(mockClock), SimpleObjectProvider(AppSettingHandler(mockMap = Optional.of(settingMap)))
+        ActorSession(), Timestamper(mockClock), AppSettingHandler(mockMap = Optional.of(settingMap))
 ) {
     fun setting(id: String, value: String): MockDomainHelper {
         settingMap[id] = value

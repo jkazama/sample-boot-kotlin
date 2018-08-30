@@ -2,6 +2,7 @@ package sample.context.audit
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import sample.InvocationException
@@ -17,6 +18,7 @@ import java.util.*
  * <p>対象となるログはLoggerだけでなく、システムスキーマの監査テーブルへ書きだされます。
  * (開始時と完了時で別TXにする事で応答無し状態を検知可能)
  */
+@Component
 class AuditHandler(
         val session: ActorSession,
         val persister: AuditPersister
@@ -29,10 +31,10 @@ class AuditHandler(
 
     /** 与えた処理に対し、監査ログを記録します。  */
     fun audit(message: String, command: Runnable) {
-        audit("default", message, {
+        audit("default", message) {
             command.run()
             true
-        })
+        }
     }
 
     /** 与えた処理に対し、監査ログを記録します。  */
@@ -60,10 +62,10 @@ class AuditHandler(
 
     /** 与えた処理に対し、監査ログを記録します。  */
     fun audit(category: String, message: String, command: Runnable) {
-        audit(category, message, {
+        audit(category, message) {
             command.run()
             true
-        })
+        }
     }
 
     private fun logger(): Logger {
@@ -94,7 +96,7 @@ class AuditHandler(
 
             val v = callable()
             try {
-                audit.ifPresent(({ persister.finish(it) }))
+                audit.ifPresent { persister.finish(it) }
             } catch (e: Exception) {
                 log.error(e.message, e)
             }
@@ -102,21 +104,21 @@ class AuditHandler(
             return v
         } catch (e: ValidationException) {
             try {
-                audit.ifPresent({ persister.cancel(it, e.message.orEmpty()) })
+                audit.ifPresent { persister.cancel(it, e.message.orEmpty()) }
             } catch (ex: Exception) {
                 log.error(ex.message, ex)
             }
             throw e
         } catch (e: RuntimeException) {
             try {
-                audit.ifPresent({ persister.error(it, e.message.orEmpty()) })
+                audit.ifPresent { persister.error(it, e.message.orEmpty()) }
             } catch (ex: Exception) {
                 log.error(ex.message, ex)
             }
             throw e
         } catch (e: Exception) {
             try {
-                audit.ifPresent({ persister.error(it, e.message.orEmpty()) })
+                audit.ifPresent { persister.error(it, e.message.orEmpty()) }
             } catch (ex: Exception) {
                 log.error(ex.message, ex)
             }
@@ -176,8 +178,9 @@ class AuditHandler(
 /**
  * 監査ログをシステムスキーマへ永続化します。
  */
-open class AuditPersister(
-        val rep: SystemRepository
+@Component
+class AuditPersister(
+        private val rep: SystemRepository
 ) {
 
     @Transactional(value = SystemRepository.BeanNameTx, propagation = Propagation.REQUIRES_NEW)

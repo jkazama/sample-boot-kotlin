@@ -23,7 +23,7 @@ class AccountController(
 
     /** ログイン状態を確認します。  */
     @GetMapping("/loginStatus")
-    fun loginStatus(): ResponseEntity<Boolean> = ResponseEntity(true, HttpStatus.OK)
+    fun loginStatus(): ResponseEntity<Boolean> = ResponseEntity.ok(true)
 
     /** 口座ログイン情報を取得します。  */
     @GetMapping("/loginAccount")

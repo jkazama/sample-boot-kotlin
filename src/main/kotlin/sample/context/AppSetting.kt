@@ -19,16 +19,16 @@ import javax.validation.constraints.Size
 data class AppSetting(
         /** 設定ID */
         @Id
-        @Size(max = 120)
+        @field:Size(max = 120)
         val id: String,
         /** 区分 */
-        @Size(max = 60)
+        @field:Size(max = 60)
         var category: String,
         /** 概要 */
-        @Size(max = 1300)
+        @field:Size(max = 1300)
         var outline: String,
         /** 値 */
-        @Size(max = 1300)
+        @field:Size(max = 1300)
         var value: String?
 ) : OrmActiveRecord<AppSetting>() {
 
@@ -40,24 +40,20 @@ data class AppSetting(
     }
 
     fun intValue(): Int = value!!.toInt()
-    fun intValue(defaultValue: Int): Int {
-        return if (value == null) defaultValue else Integer.parseInt(value)
-    }
+    fun intValue(defaultValue: Int): Int =
+        if (value == null) defaultValue else  Integer.parseInt(value)
 
     fun longValue(): Long = value!!.toLong()
-    fun longValue(defaultValue: Long): Long {
-        return if (value == null) defaultValue else value!!.toLong()
-    }
+    fun longValue(defaultValue: Long): Long =
+        if (value == null) defaultValue else value!!.toLong()
 
     fun bool(): Boolean = value!!.toBoolean()
-    fun bool(defaultValue: Boolean): Boolean {
-        return if (value == null) defaultValue else value!!.toBoolean()
-    }
+    fun bool(defaultValue: Boolean): Boolean =
+        if (value == null) defaultValue else value!!.toBoolean()
 
     fun decimal(): BigDecimal = BigDecimal(value)
-    fun decimal(defaultValue: BigDecimal): BigDecimal {
-        return if (value == null) defaultValue else BigDecimal(value)
-    }
+    fun decimal(defaultValue: BigDecimal): BigDecimal =
+        if (value == null) defaultValue else BigDecimal(value)
 
     /** 設定情報値を設定します。  */
     fun update(rep: OrmRepository, value: String): AppSetting {
@@ -79,16 +75,16 @@ data class AppSetting(
 
         /** アプリケーション設定情報を検索します。  */
         fun find(rep: OrmRepository, p: FindAppSetting): List<AppSetting> {
-            return rep.tmpl().findByCriteria(AppSetting::class.java, { criteria ->
+            return rep.tmpl().findByCriteria(AppSetting::class.java) { criteria ->
                 criteria
                         .like(arrayOf("id", "category", "outline"), p.keyword, MatchMode.ANYWHERE)
                         .result()
-            })
+            }
         }
     }
 }
 
 data class FindAppSetting(
-        @OutlineEmpty
-        val keyword: String
+        @field:OutlineEmpty
+        val keyword: String? = null
 )

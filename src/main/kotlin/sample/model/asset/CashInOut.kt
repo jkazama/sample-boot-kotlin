@@ -1,5 +1,6 @@
 package sample.model.asset
 
+import org.springframework.format.annotation.DateTimeFormat
 import sample.ActionStatusType
 import sample.ErrorKeys
 import sample.context.Dto
@@ -36,56 +37,61 @@ data class CashInOut(
         @GeneratedValue
         var id: Long? = null,
         /** 口座ID  */
-        @IdStr
+        @field:IdStr
         val accountId: String,
         /** 通貨  */
-        @Currency
+        @field:Currency
         val currency: String,
         /** 金額(絶対値)  */
-        @AbsAmount
+        @field:AbsAmount
         val absAmount: BigDecimal,
         /** 出金時はtrue  */
         val withdrawal: Boolean,
         /** 依頼日/日時  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val requestDay: LocalDate,
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         val requestDate: LocalDateTime,
         /** 発生日  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val eventDay: LocalDate,
         /** 受渡日  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val valueDay: LocalDate,
         /** 相手方金融機関コード  */
-        @IdStr
+        @field:IdStr
         val targetFiCode: String,
         /** 相手方金融機関口座ID  */
-        @IdStr
+        @field:IdStr
         val targetFiAccountId: String,
         /** 自社方金融機関コード  */
-        @IdStr
+        @field:IdStr
         val selfFiCode: String,
         /** 自社方金融機関口座ID  */
-        @IdStr
+        @field:IdStr
         val selfFiAccountId: String,
         /** 処理種別  */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         var statusType: ActionStatusType,
         /** キャッシュフローID。処理済のケースでのみ設定されます。low: 実際は調整CFや消込CFの概念なども有  */
         var cashflowId: Long? = null,
         /** 登録日時  */
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         override var createDate: LocalDateTime? = null,
         /** 登録者ID  */
-        @IdStr
+        @field:IdStr
         override var createId: String? = null,
         /** 更新日時  */
-        @ISODateTime
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         override var updateDate: LocalDateTime? = null,
         /** 更新者ID  */
-        @IdStr
+        @field:IdStr
         override var updateId: String? = null
 ) : OrmActiveMetaRecord<CashInOut>() {
 
@@ -140,7 +146,9 @@ data class CashInOut(
      * low: 実際はエラー事由などを引数に取って保持する
      */
     fun error(rep: OrmRepository): CashInOut {
-        validate { v -> v.verify(statusType.isUnprocessed, ErrorKeys.ActionUnprocessing) }
+        validate { v ->
+            v.verify(statusType.isUnprocessed, ErrorKeys.ActionUnprocessing)
+        }
 
         this.statusType = ActionStatusType.Error
         return update(rep)
@@ -159,7 +167,7 @@ data class CashInOut(
             val jpql = JpqlBuilder.of("FROM CashInOut c")
                     .equal("c.currency", p.currency)
                     .`in`("c.statusType", p.statusTypes)
-                    .between("c.updateDate", p.updFromDay.atStartOfDay(), DateUtils.dateTo(p.updToDay))
+                    .between("c.updateDate", p.updFromDay!!.atStartOfDay(), DateUtils.dateTo(p.updToDay!!))
                     .orderBy("c.updateDate DESC")
             return rep.tmpl().find(jpql.build(), *jpql.args())
         }
@@ -191,14 +199,14 @@ data class CashInOut(
             val valueDay = day.day(3)
 
             // 事前審査
-            Validator.validate({ v ->
-                v.verifyField(0 < p.absAmount.signum(), "absAmount", DomainErrorKeys.AbsAmountZero)
-                val canWithdraw = Asset(p.accountId!!).canWithdraw(rep, p.currency, p.absAmount, valueDay)
+            Validator.validate { v ->
+                v.verifyField(0 < p.absAmount!!.signum(), "absAmount", DomainErrorKeys.AbsAmountZero)
+                val canWithdraw = Asset(p.accountId!!).canWithdraw(rep, p.currency!!, p.absAmount, valueDay)
                 v.verifyField(canWithdraw, "absAmount", AssetErrorKeys.CashInOutWithdrawAmount)
-            })
+            }
 
             // 出金依頼情報を登録
-            val acc = FiAccount.load(rep, p.accountId!!, Remarks.CashOut, p.currency)
+            val acc = FiAccount.load(rep, p.accountId!!, Remarks.CashOut, p.currency!!)
             val selfAcc = SelfFiAccount.load(rep, Remarks.CashOut, p.currency)
             return p.create(now, eventDay, valueDay, acc, selfAcc).save(rep)
         }
@@ -208,32 +216,34 @@ data class CashInOut(
 
 /** 振込入出金依頼の検索パラメタ。 low: 通常は顧客視点/社内視点で利用条件が異なる  */
 data class FindCashInOut(
-        @CurrencyEmpty
+        @field:CurrencyEmpty
         val currency: String? = null,
         val statusTypes: List<ActionStatusType> = listOf(),
-        @ISODate
-        val updFromDay: LocalDate,
-        @ISODate
-        val updToDay: LocalDate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val updFromDay: LocalDate? = null,
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val updToDay: LocalDate? = null
 ) : Dto
 
-/** 振込出金の依頼パラメタ。   */
+/** 振込出金の依頼パラメタ  */
 data class RegCashOut(
         /** 処理タイミングでは値が入ることが保証されます(暗黙設定されるケース向けに null 初期化を許容） */
-        @IdStrEmpty
+        @field:IdStrEmpty
         val accountId: String? = null,
-        @Currency
-        val currency: String,
-        @AbsAmount
-        val absAmount: BigDecimal
+        @field:Currency
+        val currency: String? = null,
+        @field:AbsAmount
+        val absAmount: BigDecimal? = null
 ) : Dto {
 
     fun create(now: TimePoint, eventDay: LocalDate, valueDay: LocalDate, acc: FiAccount,
                selfAcc: SelfFiAccount): CashInOut =
             CashInOut(
                     accountId = accountId!!,
-                    currency = currency,
-                    absAmount = absAmount,
+                    currency = currency!!,
+                    absAmount = absAmount!!,
                     withdrawal = true,
                     requestDay = now.day,
                     requestDate = now.date,

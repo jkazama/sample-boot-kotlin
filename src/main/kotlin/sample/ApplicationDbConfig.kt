@@ -1,5 +1,6 @@
 package sample
 
+import org.springframework.beans.factory.ObjectProvider
 import javax.persistence.EntityManagerFactory
 import sample.context.orm.SystemRepository
 import org.springframework.beans.factory.annotation.Qualifier
@@ -37,7 +38,7 @@ class ApplicationDbConfig {
     internal class DefaultDbConfig {
 
         @Bean
-        fun defaultRepository(dh: DomainHelper, interceptor: OrmInterceptor): DefaultRepository =
+        fun defaultRepository(dh: ObjectProvider<DomainHelper>, interceptor: ObjectProvider<OrmInterceptor>): DefaultRepository =
             DefaultRepository(dh, interceptor)
 
         @Bean(name = [DefaultRepository.BeanNameDs], destroyMethod = "close")
@@ -66,7 +67,7 @@ class ApplicationDbConfig {
     internal class SystemDbConfig {
 
         @Bean
-        fun systemRepository(dh: DomainHelper, interceptor: OrmInterceptor): SystemRepository =
+        fun systemRepository(dh: ObjectProvider<DomainHelper>, interceptor: ObjectProvider<OrmInterceptor>): SystemRepository =
             SystemRepository(dh, interceptor)
 
         @Bean(name = [SystemRepository.BeanNameDs], destroyMethod = "close")

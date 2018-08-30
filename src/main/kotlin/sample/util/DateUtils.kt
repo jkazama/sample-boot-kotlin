@@ -44,35 +44,35 @@ object DateUtils {
             dateByDayOpt(day).orElse(null)
 
     fun dateByDayOpt(day: LocalDate): Optional<LocalDateTime> =
-            Optional.ofNullable(day).map({ it.atStartOfDay() })
+            Optional.ofNullable(day).map { it.atStartOfDay() }
 
     /** 指定した日付の翌日から1msec引いた日時を返します。  */
     fun dateTo(day: LocalDate): LocalDateTime =
             dateToOpt(day).orElse(null)
 
     fun dateToOpt(day: LocalDate): Optional<LocalDateTime> =
-            Optional.ofNullable(day).map({ it.atTime(23, 59, 59) })
+            Optional.ofNullable(day).map { it.atTime(23, 59, 59) }
 
     /** 指定された日時型とフォーマット型を元に文字列(YYYY-MM-DD)へ変更します。  */
     fun dayFormat(day: LocalDate): String =
             dayFormatOpt(day).orElse(null)
 
     fun dayFormatOpt(day: LocalDate): Optional<String> =
-            Optional.ofNullable(day).map({ it.format(DateTimeFormatter.ISO_LOCAL_DATE) })
+            Optional.ofNullable(day).map { it.format(DateTimeFormatter.ISO_LOCAL_DATE) }
 
     /** 指定された日時型とフォーマット型を元に文字列へ変更します。  */
     fun dateFormat(date: LocalDateTime, formatter: DateTimeFormatter): String =
             dateFormatOpt(date, formatter).orElse(null)
 
     fun dateFormatOpt(date: LocalDateTime, formatter: DateTimeFormatter): Optional<String> =
-            Optional.ofNullable(date).map({ it.format(formatter) })
+            Optional.ofNullable(date).map { it.format(formatter) }
 
     /** 指定された日時型とフォーマット文字列を元に文字列へ変更します。  */
     fun dateFormat(date: LocalDateTime, format: String): String =
             dateFormatOpt(date, format).orElse(null)
 
     fun dateFormatOpt(date: LocalDateTime, format: String): Optional<String> =
-            Optional.ofNullable(date).map({ it.format(DateTimeFormatter.ofPattern(format)) })
+            Optional.ofNullable(date).map { it.format(DateTimeFormatter.ofPattern(format)) }
 
     /** 日付の間隔を取得します。  */
     fun between(start: LocalDate?, end: LocalDate?): Optional<Period> =

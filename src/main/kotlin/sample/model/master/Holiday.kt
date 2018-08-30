@@ -1,5 +1,6 @@
 package sample.model.master
 
+import org.springframework.format.annotation.DateTimeFormat
 import sample.context.Dto
 import sample.context.orm.OrmActiveMetaRecord
 import sample.context.orm.OrmRepository
@@ -12,25 +13,27 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 import javax.validation.Valid
+import javax.validation.constraints.NotNull
 
 
 /**
  * 休日マスタを表現します。
  */
 @Entity
-class Holiday(
+data class Holiday(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 休日区分  */
-        @Category
+        @field:Category
         val category: String,
         /** 休日  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val day: LocalDate,
         /** 休日名称  */
-        @Name(max = 40)
+        @field:Name(max = 40)
         val name: String,
         override var createId: String? = null,
         override var createDate: LocalDateTime? = null,
@@ -59,7 +62,7 @@ class Holiday(
         /** 休日マスタを登録します。  */
         fun register(rep: OrmRepository, p: RegHoliday) {
             rep.tmpl().execute("DELETE FROM Holiday h WHERE h.category=?1 AND h.day BETWEEN ?2 AND ?3",
-                    p.category, LocalDate.ofYearDay(p.year, 1), DateUtils.dayTo(p.year))
+                    p.category, LocalDate.ofYearDay(p.year!!, 1), DateUtils.dayTo(p.year))
             p.list.forEach { v -> v.create(p).save(rep) }
         }
     }
@@ -68,24 +71,25 @@ class Holiday(
 
 /** 登録パラメタ  */
 data class RegHoliday(
-        @Year
-        val year: Int,
-        @CategoryEmpty
+        @field:Year
+        val year: Int? = null,
+        @field:CategoryEmpty
         val category: String = Holiday.CategoryDefault,
         @Valid
         val list: List<RegHolidayItem> = listOf()) : Dto
 
 /** 登録パラメタ(要素)  */
 data class RegHolidayItem(
-        @ISODate
-        val day: LocalDate,
-        @Name(max = 40)
-        val name: String
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val day: LocalDate? = null,
+        @field:Name(max = 40)
+        val name: String? = null
 ) : Dto {
     fun create(p: RegHoliday): Holiday =
             Holiday(
                     category = p.category,
-                    day = this.day,
-                    name = this.name
+                    day = this.day!!,
+                    name = this.name!!
             )
 }

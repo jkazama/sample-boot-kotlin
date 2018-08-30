@@ -1,5 +1,6 @@
 package sample.context.report
 
+import org.springframework.stereotype.Component
 import sample.context.report.csv.CsvWriter
 import sample.context.report.csv.CsvWrite
 import sample.context.report.csv.CsvLayout
@@ -14,7 +15,8 @@ import java.io.*
  * low: サンプルではCSVのみ提供します。実際は固定長/Excel/PDFなどの取込/出力なども取り扱う可能性があります。
  * low: ExcelはPOI、PDFはJasperReportの利用が一般的です。(商用製品を利用するのもおすすめです)
  */
-open class ReportHandler {
+@Component
+class ReportHandler {
 
     /**
      * 帳票をオンメモリ上でbyte配列にします。
@@ -24,10 +26,10 @@ open class ReportHandler {
     fun convert(logic: ReportToByte): ByteArray {
         val out = ByteArrayOutputStream()
         try {
-            DataOutputStream(out).use({
+            DataOutputStream(out).use {
                 logic.execute(out)
                 return out.toByteArray()
-            })
+            }
         } catch (e: IOException) {
             throw InvocationException(e)
         }

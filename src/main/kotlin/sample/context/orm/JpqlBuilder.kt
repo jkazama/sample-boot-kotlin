@@ -35,10 +35,10 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
 
     /** 一致条件を付与します。(値がnullの時は無視されます)  */
     fun equal(field: String, value: Any?): JpqlBuilder =
-            ifValid(value, {
+            ifValid(value) {
                 conditions.add(String.format("%s = ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
-            })
+            }
 
     private fun ifValid(value: Any?, command: () -> Unit): JpqlBuilder {
         if (isValid(value)) {
@@ -196,12 +196,12 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         if (!conditions.isEmpty()) {
             jpql.append(" where ")
             val first = AtomicBoolean(true)
-            conditions.forEach({ condition ->
+            conditions.forEach { condition ->
                 if (!first.getAndSet(false)) {
                     jpql.append(" and ")
                 }
                 jpql.append(condition)
-            })
+            }
         }
         orderBy.ifPresent { v -> jpql.append(" order by $v") }
         return jpql.toString()

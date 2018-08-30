@@ -1,24 +1,22 @@
 package sample.context.orm
 
-import org.apache.commons.lang3.ArrayUtils
-import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
-import org.springframework.orm.jpa.JpaTransactionManager
-import javax.persistence.EntityManagerFactory
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
-import org.springframework.orm.jpa.JpaVendorAdapter
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateSettings
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder
-import org.terracotta.statistics.StatisticsManager.properties
+import org.springframework.orm.jpa.JpaTransactionManager
+import org.springframework.orm.jpa.JpaVendorAdapter
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
+import javax.persistence.EntityManagerFactory
 import javax.sql.DataSource
 
 
 /** JPA コンポーネントを生成するための設定情報を表現します。 */
-class OrmRepositoryProperties(
+data class OrmRepositoryProperties(
         /** スキーマ紐付け対象とするパッケージ。(annotatedClassesとどちらかを設定) */
-        var packageToScan: Array<String>? = null,
+        var packageToScan: Collection<String> = listOf(),
         /** Entityとして登録するクラス。(packageToScanとどちらかを設定) */
-        var annotatedClasses: Array<Class<*>>? = null
+        var annotatedClasses: Collection<Class<*>> = listOf()
 ) : JpaProperties() {
 
     fun entityManagerFactoryBean(name: String, dataSource: DataSource): LocalContainerEntityManagerFactoryBean {
@@ -29,10 +27,10 @@ class OrmRepositoryProperties(
                 .persistenceUnit(name)
                 .properties(getHibernateProperties(HibernateSettings()))
                 .jta(false)
-        if (ArrayUtils.isNotEmpty(annotatedClasses)) {
-            builder.packages(*annotatedClasses.orEmpty())
+        if (annotatedClasses.isNotEmpty()) {
+            builder.packages(*annotatedClasses.toTypedArray())
         } else {
-            builder.packages(*packageToScan.orEmpty())
+            builder.packages(*packageToScan.toTypedArray())
         }
         return builder.build()
     }
@@ -49,6 +47,6 @@ class OrmRepositoryProperties(
     }
 
     fun transactionManager(emf: EntityManagerFactory): JpaTransactionManager =
-        JpaTransactionManager(emf)
+            JpaTransactionManager(emf)
 
 }

@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import sample.context.Entity
+import sample.context.SimpleObjectProvider
 import sample.context.Timestamper
 import sample.context.actor.ActorSession
 import sample.context.orm.*
@@ -31,7 +32,7 @@ open class EntityTestSupport(
         var dh: MockDomainHelper = MockDomainHelper(mockClock = clock),
         var time: Timestamper = dh.time,
         var session: ActorSession = dh.actorSession,
-        var businessDay: BusinessDayHandler = BusinessDayHandler(time = dh.time),
+        var businessDay: BusinessDayHandler = BusinessDayHandler(time = dh.time, holidayAccessor = SimpleObjectProvider(null)),
         var encoder: PasswordEncoder = BCryptPasswordEncoder()
 ) {
     private var emf: EntityManagerFactory? = null
@@ -106,8 +107,8 @@ open class EntityTestSupport(
     fun setupRepository() {
         setupEntityManagerFactory()
         val em = SharedEntityManagerCreator.createSharedEntityManager(emf!!)
-        rep = DefaultRepository(dh, entityInterceptor(), em)
-        repSystem = SystemRepository(dh, entityInterceptor(), em)
+        rep = DefaultRepository(SimpleObjectProvider(dh), SimpleObjectProvider(entityInterceptor()), em)
+        repSystem = SystemRepository(SimpleObjectProvider(dh), SimpleObjectProvider(entityInterceptor()), em)
     }
 
     fun setupDataFixtures() {
@@ -125,12 +126,12 @@ open class EntityTestSupport(
     fun setupEntityManagerFactory() {
         val ds = EntityTestFactory.dataSource()
         val props = DefaultDataSourceProperties()
-        props.jpa.setShowSql(true)
-        props.jpa.getHibernate().setDdlAuto("create-drop")
+        props.jpa.isShowSql = true
+        props.jpa.hibernate.ddlAuto = "create-drop"
         if (targetEntities.isEmpty()) {
-            props.jpa.packageToScan = arrayOf(packageToScan)
+            props.jpa.packageToScan = listOf(packageToScan)
         } else {
-            props.jpa.annotatedClasses = targetEntities.toTypedArray()
+            props.jpa.annotatedClasses = targetEntities
         }
 
         val emfBean = props.entityManagerFactoryBean(ds)
@@ -168,8 +169,8 @@ object EntityTestFactory {
     }
 
     fun dataSource(): DataSource =
-            ds.orElseGet({
+            ds.orElseGet {
                 ds = Optional.of(createDataSource())
                 ds.get()
-            })
+            }
 }

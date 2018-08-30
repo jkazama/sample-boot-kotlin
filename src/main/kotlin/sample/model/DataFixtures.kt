@@ -32,8 +32,9 @@ import javax.annotation.PostConstruct
  *
  * テストや開発時の簡易マスタデータ生成を目的としているため本番での利用は想定していません。
  */
+@Component
 @ConditionalOnProperty(prefix = "extension.datafixture", name = ["enabled"], matchIfMissing = false)
-open class DataFixtures(
+class DataFixtures(
         val time: Timestamper,
         val businessDay: BusinessDayHandler,
         val encoder: PasswordEncoder,
@@ -151,7 +152,7 @@ open class DataFixtures(
 
     /** 社員権限の簡易生成  */
     fun staffAuth(id: String, vararg authority: String): List<StaffAuthority> =
-            authority.map({ StaffAuthority(staffId = id, authority = it) })
+            authority.map { StaffAuthority(staffId = id, authority = it) }
 
     /** 自社金融機関口座の簡易生成  */
     fun selfFiAcc(category: String, currency: String): SelfFiAccount =

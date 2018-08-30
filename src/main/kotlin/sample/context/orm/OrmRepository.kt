@@ -1,5 +1,6 @@
 package sample.context.orm
 
+import org.springframework.beans.factory.ObjectProvider
 import sample.ErrorKeys
 import sample.ValidationException
 import sample.context.DomainHelper
@@ -18,8 +19,8 @@ import javax.persistence.LockModeType
  * <p>OrmRepository を継承して作成される Repository の粒度はデータソース単位となります。
  */
 abstract class OrmRepository(
-        private val dh: DomainHelper,
-        val interceptor: OrmInterceptor? = null
+        private val dh: ObjectProvider<DomainHelper>,
+        private val interceptor: ObjectProvider<OrmInterceptor>
 ) : Repository {
 
     /**
@@ -29,12 +30,10 @@ abstract class OrmRepository(
     abstract fun em(): EntityManager
 
     /** {@inheritDoc}  */
-    override fun dh(): DomainHelper {
-        return dh
-    }
+    override fun dh(): DomainHelper = dh.getObject()
 
-    protected fun interceptor(): Optional<OrmInterceptor> {
-        return Optional.ofNullable(interceptor)
+    fun interceptor(): Optional<OrmInterceptor> {
+        return Optional.ofNullable(interceptor.ifAvailable)
     }
 
     /**
@@ -89,7 +88,7 @@ abstract class OrmRepository(
 
     /** {@inheritDoc}  */
     override fun <T : Entity> exists(clazz: Class<T>, id: Serializable): Boolean {
-        return get(clazz, id).isPresent()
+        return get(clazz, id).isPresent
     }
 
     /** {@inheritDoc}  */
@@ -99,20 +98,20 @@ abstract class OrmRepository(
 
     /** {@inheritDoc}  */
     override fun <T : Entity> save(entity: T): T {
-        interceptor().ifPresent({i -> i.touchForCreate(entity)})
+        interceptor().ifPresent { it.touchForCreate(entity)}
         em().persist(entity)
         return entity
     }
 
     /** {@inheritDoc}  */
     override fun <T : Entity> saveOrUpdate(entity: T): T {
-        interceptor().ifPresent({ i -> i.touchForUpdate(entity) })
+        interceptor().ifPresent { it.touchForUpdate(entity) }
         return em().merge(entity)
     }
 
     /** {@inheritDoc}  */
     override fun <T : Entity> update(entity: T): T {
-        interceptor().ifPresent({ i -> i.touchForUpdate(entity) })
+        interceptor().ifPresent { it.touchForUpdate(entity) }
         return em().merge(entity)
     }
 

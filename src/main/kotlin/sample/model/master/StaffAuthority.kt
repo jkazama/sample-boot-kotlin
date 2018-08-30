@@ -13,16 +13,16 @@ import javax.persistence.Id
  * 社員に割り当てられた権限を表現します。
  */
 @Entity
-class StaffAuthority(
+data class StaffAuthority(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 社員ID  */
-        @IdStr
+        @field:IdStr
         val staffId: String,
         /** 権限名称。(「プリフィックスにROLE_」を付与してください)  */
-        @Name
+        @field:Name
         val authority: String
 ) : OrmActiveRecord<StaffAuthority>() {
     companion object {

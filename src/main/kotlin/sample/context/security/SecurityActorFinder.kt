@@ -6,28 +6,24 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import sample.context.actor.Actor
 import java.util.*
-import java.util.stream.Collectors
 import javax.servlet.http.HttpServletRequest
 
 /**
  * Spring Securityで利用される認証/認可対象となるユーザ情報を提供します。
  */
-class SecurityActorFinder(
-        val props: SecurityProperties,
-        val userService: ObjectProvider<SecurityUserService>,
-        val adminService: ObjectProvider<SecurityAdminService>
+open class SecurityActorFinder(
+        private val props: SecurityProperties,
+        private val userService: ObjectProvider<SecurityUserService>,
+        private val adminService: ObjectProvider<SecurityAdminService>
 ) {
 
     /** 現在のプロセス状態に応じたUserDetailServiceを返します。  */
     fun detailsService(): SecurityActorService =
             if (props.auth.admin) adminService() else userService.getObject()
 
-    private fun adminService(): SecurityAdminService =
-            Optional.ofNullable(adminService.ifAvailable)
-                    .orElseThrow({ IllegalStateException("SecurityAdminServiceをコンテナへBean登録してください。") })
+    private fun adminService(): SecurityAdminService = adminService.getObject()
 
     companion object {
 
@@ -44,8 +40,8 @@ class SecurityActorFinder(
          */
         fun actorDetails(): Optional<ActorDetails> =
                 authentication()
-                        .filter { it.getDetails() is ActorDetails }
-                        .map { it.getDetails() as ActorDetails }
+                        .filter { it.details is ActorDetails }
+                        .map { it.details as ActorDetails }
     }
 
 }
@@ -111,7 +107,6 @@ interface SecurityActorService : UserDetailsService {
      * 与えられたログインIDを元に認証/認可対象のユーザ情報を返します。
      * @see org.springframework.security.core.userdetails.UserDetailsService.loadUserByUsername
      */
-    @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): ActorDetails
 }
 

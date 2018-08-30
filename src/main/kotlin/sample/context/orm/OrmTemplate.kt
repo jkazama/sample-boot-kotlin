@@ -48,7 +48,7 @@ class OrmTemplate(
      * ※ランダムな条件検索等、可変条件検索が必要となる時に利用して下さい
      */
     fun <T> findByCriteria(criteria: CriteriaQuery<T>): List<T> =
-        query(criteria).getResultList()
+        query(criteria).resultList
 
     /**
      * Criteria でページング検索します。
@@ -57,7 +57,7 @@ class OrmTemplate(
      */
     fun <T> findByCriteria(criteria: CriteriaQuery<T>, criteriaCount: Optional<CriteriaQuery<Long>>, page: Pagination): PagingList<T> {
         Assert.notNull(page, "page is required")
-        val total = criteriaCount.map { query(it).getResultList().get(0) }.orElse(-1L)
+        val total = criteriaCount.map { query(it).resultList.get(0) }.orElse(-1L)
         if (total == 0L) return PagingList(mutableListOf(), Pagination.of(page, 0))
 
         val query = query<T>(criteria)
@@ -168,7 +168,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> find(qlString: String, vararg args: Any): List<T> =
-        bindArgs(em.createQuery(qlString), *args).getResultList() as List<T>
+        bindArgs(em.createQuery(qlString), *args).resultList as List<T>
 
     /**
      * JPQL でページング検索します。
@@ -182,7 +182,7 @@ class OrmTemplate(
      */
     fun <T> find(qlString: String, page: Pagination, vararg args: Any): PagingList<T> {
         val total = if (page.ignoreTotal) -1L else load(OrmUtils.createCountQueryFor(qlString), args)
-        val list = bindArgsWithPage(em.createQuery(qlString), page, *args).getResultList() as List<T>
+        val list = bindArgsWithPage(em.createQuery(qlString), page, *args).resultList as List<T>
         return PagingList(list, Pagination.of(page, total))
     }
 
@@ -231,7 +231,7 @@ class OrmTemplate(
      */
     fun <T> findNamed(name: String, nameCount: String, page: Pagination, args: Map<String, Any>): PagingList<T> {
         val total = if (page.ignoreTotal) -1L else loadNamed(nameCount, args)
-        val list = bindArgsWithPage(em.createNamedQuery(name), page, args).getResultList() as List<T>
+        val list = bindArgsWithPage(em.createNamedQuery(name), page, args).resultList as List<T>
         return PagingList(list, Pagination.of(page, total))
     }
 
@@ -243,7 +243,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> findBySql(sql: String, vararg args: Any): List<T> =
-        bindArgs(em.createNativeQuery(sql), *args).getResultList() as List<T>
+        bindArgs(em.createNativeQuery(sql), *args).resultList as List<T>
 
     /**
      * SQL で検索します。
@@ -251,7 +251,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> findBySql(sql: String, clazz: Class<T>, vararg args: Any): List<T> =
-        bindArgs(em.createNativeQuery(sql, clazz), *args).getResultList() as List<T>
+        bindArgs(em.createNativeQuery(sql, clazz), *args).resultList as List<T>
 
     /**
      * SQL でページング検索します。
@@ -262,7 +262,7 @@ class OrmTemplate(
      */
     fun <T> findBySql(sql: String, sqlCount: String, page: Pagination, vararg args: Any): PagingList<T> {
         val total = if (page.ignoreTotal) -1L else findBySql<Any>(sqlCount, *args).stream().findFirst().map { v -> java.lang.Long.parseLong(v.toString()) }.orElse(0L)
-        val list = bindArgsWithPage(em.createNativeQuery(sql), page, *args).getResultList() as List<T>
+        val list = bindArgsWithPage(em.createNativeQuery(sql), page, *args).resultList as List<T>
         return PagingList<T>(list, Pagination.of(page, total))
     }
 
@@ -275,7 +275,7 @@ class OrmTemplate(
      */
     fun <T> findBySql(sql: String, sqlCount: String, clazz: Class<T>, page: Pagination, vararg args: Any): PagingList<T> {
         val total = if (page.ignoreTotal) -1L else findBySql<Any>(sqlCount, *args).stream().findFirst().map { v -> java.lang.Long.parseLong(v.toString()) }.orElse(0L)
-        val list = bindArgsWithPage(em.createNativeQuery(sql, clazz), page, *args).getResultList() as List<T>
+        val list = bindArgsWithPage(em.createNativeQuery(sql, clazz), page, *args).resultList as List<T>
         return PagingList<T>(list, Pagination.of(page, total))
     }
 
@@ -320,9 +320,9 @@ class OrmTemplate(
     fun bindArgsWithPage(query: Query, page: Pagination?, vararg args: Any): Query {
         if (page != null) {
             if (page.page > 0)
-                query.setFirstResult(page.firstResult)
+                query.firstResult = page.firstResult
             if (page.size > 0)
-                query.setMaxResults(page.size)
+                query.maxResults = page.size
         }
         for (i in args.indices) {
             val arg = args[i]

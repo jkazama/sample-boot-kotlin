@@ -2,6 +2,7 @@ package sample.context
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.support.ResourceBundleMessageSource
+import org.springframework.stereotype.Component
 import java.util.*
 import java.util.Locale
 
@@ -13,8 +14,9 @@ import java.util.Locale
  * 持つため、別インスタンスでの管理としています。
  * （spring.messageとは別に指定[extension.messages]する必要があるので注意してください）
  */
+@Component
 @ConfigurationProperties(prefix = "extension.messages")
-open class ResourceBundleHandler(val encoding: String = "UTF-8") {
+class ResourceBundleHandler(private val encoding: String = "UTF-8") {
     private val bundleMap: MutableMap<String, ResourceBundle> = mutableMapOf()
 
     /**

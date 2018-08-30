@@ -46,7 +46,7 @@ class OrmCriteria<T>(
      * 複雑なクエリや集計関数は本メソッドで返却された query を元に追加構築してください。
      */
     fun result(): CriteriaQuery<T> {
-        return result({ it })
+        return result { it }
     }
 
     fun result(extension: (CriteriaQuery<*>) -> CriteriaQuery<*>): CriteriaQuery<T> {
@@ -56,7 +56,7 @@ class OrmCriteria<T>(
     }
 
     fun resultCount(): CriteriaQuery<Long> =
-            resultCount({ it })
+            resultCount { it }
 
     fun resultCount(extension: (CriteriaQuery<*>) -> CriteriaQuery<*>): CriteriaQuery<Long> {
         val q = builder.createQuery(Long::class.java)
@@ -115,7 +115,7 @@ class OrmCriteria<T>(
     private fun isValid(value: Any?): Boolean =
             when (value) {
                 is String? -> !value.isNullOrBlank()
-                is Optional<*> -> value.isPresent()
+                is Optional<*> -> value.isPresent
                 else -> value != null
             }
 

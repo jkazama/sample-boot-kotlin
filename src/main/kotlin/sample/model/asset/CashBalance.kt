@@ -1,5 +1,6 @@
 package sample.model.asset
 
+import org.springframework.format.annotation.DateTimeFormat
 import sample.context.orm.OrmActiveRecord
 import sample.context.orm.OrmRepository
 import sample.model.constraints.*
@@ -11,30 +12,33 @@ import java.time.LocalDateTime
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
+import javax.validation.constraints.NotNull
 
 /**
  * 口座残高を表現します。
  */
 @Entity
-class CashBalance(
+data class CashBalance(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 口座ID  */
-        @IdStr
+        @field:IdStr
         val accountId: String,
         /** 基準日  */
-        @ISODate
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         val baseDay: LocalDate,
         /** 通貨  */
-        @Currency
+        @field:Currency
         val currency: String,
         /** 金額  */
-        @Amount
+        @field:Amount
         var amount: BigDecimal,
         /** 更新日  */
-        @ISODateTime
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         var updateDate: LocalDateTime
 ) : OrmActiveRecord<CashBalance>() {
 
@@ -46,7 +50,7 @@ class CashBalance(
         val scale = java.util.Currency.getInstance(currency).defaultFractionDigits
         this.amount = Calculator.of(amount).scale(scale, RoundingMode.DOWN)
                 .add(addAmount)
-                .decimal
+                .decimal()
         return update(rep)
     }
 
@@ -78,5 +82,4 @@ class CashBalance(
             }
         }
     }
-
 }

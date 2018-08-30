@@ -42,9 +42,7 @@ class CsvReader(val data: ByteArray?, val ins: InputStream?, val layout: CsvLayo
 
     private fun closeQuietly(closeable: Closeable?) {
         try {
-            if (closeable != null) {
-                closeable.close()
-            }
+            closeable?.close()
         } catch (ioe: IOException) {
         }
     }

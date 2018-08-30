@@ -1,32 +1,30 @@
 package sample.model
 
 import org.springframework.beans.factory.ObjectProvider
-import sample.context.orm.DefaultRepository
 import org.springframework.cache.annotation.CacheEvict
-import java.time.LocalDate
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import sample.context.SimpleObjectProvider
 import sample.context.Timestamper
+import sample.context.orm.DefaultRepository
 import sample.model.master.Holiday
 import sample.model.master.RegHoliday
 import sample.util.DateUtils
+import java.time.LocalDate
 import java.util.*
-
 
 /**
  * ドメインに依存する営業日関連のユーティリティハンドラ。
  */
-open class BusinessDayHandler(
-        val time: Timestamper,
-        val holidayAccessor: ObjectProvider<HolidayAccessor> = SimpleObjectProvider(null)
+@Component
+class BusinessDayHandler(
+        private val time: Timestamper,
+        private var holidayAccessor: ObjectProvider<HolidayAccessor>
 ) {
 
     /** 営業日を返します。  */
-    fun day(): LocalDate {
-        return time.day()
-    }
+    fun day(): LocalDate = time.day()
 
     /** 営業日を返します。  */
     fun day(daysToAdd: Int): LocalDate {
@@ -43,8 +41,9 @@ open class BusinessDayHandler(
 
     private fun dayNext(baseDay: LocalDate): LocalDate {
         var day = baseDay.plusDays(1)
-        while (isHolidayOrWeekDay(day))
+        while (isHolidayOrWeekDay(day)) {
             day = day.plusDays(1)
+        }
         return day
     }
 
@@ -57,31 +56,29 @@ open class BusinessDayHandler(
 
     /** 祝日もしくは週末時はtrue。  */
     private fun isHolidayOrWeekDay(day: LocalDate): Boolean =
-        DateUtils.isWeekend(day) || isHoliday(day)
+            DateUtils.isWeekend(day) || isHoliday(day)
 
     private fun isHoliday(day: LocalDate): Boolean =
-        if (holidayAccessor.ifAvailable == null) {
-            false
-        } else {
-            holidayAccessor.getObject().getHoliday(day).isPresent
-        }
-
-    /** 祝日マスタを検索/登録するアクセサ。  */
-    @Component
-    class HolidayAccessor(val rep: DefaultRepository) {
-
-        @Transactional(DefaultRepository.BeanNameTx)
-        @Cacheable(cacheNames = ["HolidayAccessor.getHoliday"])
-        fun getHoliday(day: LocalDate): Optional<Holiday> {
-            return Holiday.get(rep, day)
-        }
-
-        @Transactional(DefaultRepository.BeanNameTx)
-        @CacheEvict(cacheNames = ["HolidayAccessor.getHoliday"], allEntries = true)
-        fun register(rep: DefaultRepository, p: RegHoliday) {
-            Holiday.register(rep, p)
-        }
-
-    }
+            when (holidayAccessor.ifAvailable) {
+                null -> false
+                else -> holidayAccessor.getObject().getHoliday(day).isPresent
+            }
 
 }
+
+/** 祝日マスタを検索/登録するアクセサ。  */
+@Component
+class HolidayAccessor(val rep: DefaultRepository) {
+
+    @Transactional(DefaultRepository.BeanNameTx)
+    @Cacheable(cacheNames = ["HolidayAccessor.getHoliday"])
+    fun getHoliday(day: LocalDate): Optional<Holiday> =
+        Holiday.get(rep, day)
+
+    @Transactional(DefaultRepository.BeanNameTx)
+    @CacheEvict(cacheNames = ["HolidayAccessor.getHoliday"], allEntries = true)
+    fun register(rep: DefaultRepository, p: RegHoliday) =
+        Holiday.register(rep, p)
+
+}
+

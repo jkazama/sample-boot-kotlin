@@ -3,6 +3,7 @@ package sample.context.lock
 import java.io.Serializable
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import org.apache.logging.log4j.ThreadContext.containsKey
+import org.springframework.stereotype.Component
 import sample.InvocationException
 import java.util.*
 
@@ -12,17 +13,11 @@ import java.util.*
  * low: ここではシンプルに口座単位のIDロックのみをターゲットにします。
  * low: 通常はDBのロックテーブルに"for update"要求で悲観的ロックをとったりしますが、サンプルなのでメモリロックにしてます。
  */
-open class IdLockHandler() {
-    val lockMap = mutableMapOf<Serializable, ReentrantReadWriteLock>()
+@Component
+class IdLockHandler() {
+    private val lockMap = mutableMapOf<Serializable, ReentrantReadWriteLock>()
 
     /** IDロック上で処理を実行します。  */
-    fun call(id: Serializable, lockType: LockType, command: Runnable): Unit {
-        call(id, lockType, {
-            command.run()
-            true
-        })
-    }
-
     fun <T> call(id: Serializable, lockType: LockType, callable: () -> T): T {
         if (lockType.isWrite) writeLock(id) else readLock(id)
         try {

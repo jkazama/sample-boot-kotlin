@@ -1,9 +1,12 @@
 package sample.context.security
 
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletRegistrationBean
 import org.springframework.context.MessageSource
+import org.springframework.context.annotation.Lazy
+import org.springframework.core.annotation.Order
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.AuthenticationProvider
 import org.springframework.security.authentication.BadCredentialsException
@@ -22,6 +25,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.logout.LogoutFilter
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
+import org.springframework.stereotype.Component
 import org.springframework.web.filter.CorsFilter
 import org.springframework.web.filter.GenericFilterBean
 import sample.ErrorKeys
@@ -49,43 +53,52 @@ import javax.servlet.http.HttpServletResponse
  *
  * low: 本サンプルでは無効化していますが、CSRF対応はプロジェクト毎に適切な利用を検討してください。
  */
+@Component
+@Order(org.springframework.boot.autoconfigure.security.SecurityProperties.BASIC_AUTH_ORDER)
 class SecurityConfigurer(
         /** 拡張セキュリティ情報  */
-        val props: SecurityProperties,
-        /** 認証/認可利用者サービス  */
-        val actorFinder: SecurityActorFinder,
+        private val props: SecurityProperties,
         /** カスタムエントリポイント(例外対応)  */
-        val entryPoint: SecurityEntryPoint,
+        @Lazy
+        private val entryPoint: SecurityEntryPoint,
         /** ログイン/ログアウト時の拡張ハンドラ  */
-        val loginHandler: LoginHandler,
+        @Lazy
+        private val loginHandler: LoginHandler,
         /** ThreadLocalスコープの利用者セッション  */
-        val actorSession: ActorSession,
+        @Lazy
+        private val actorSession: ActorSession,
         /** CORS利用時のフィルタ  */
-        val corsFilter: CorsFilter? = null,
+        private val corsFilter: ObjectProvider<CorsFilter>,
         /** 認証配下に置くServletFilter  */
-        val filters: SecurityFilters? = null,
+        private val filters: ObjectProvider<SecurityFilters>,
         /** 適用対象となる DistpatcherServlet 登録情報  */
         @Qualifier(DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_REGISTRATION_BEAN_NAME)
-        val dispatcherServletRegistration: DispatcherServletRegistrationBean
+        private val dispatcherServletRegistration: DispatcherServletRegistrationBean
 ) : WebSecurityConfigurerAdapter() {
 
-    @Throws(Exception::class)
     override fun configure(web: WebSecurity?) {
         web!!.ignoring().mvcMatchers(
                 *props.auth.ignorePath.map { dispatcherServletRegistration.getRelativePath(it) }.toTypedArray())
     }
 
-    @Throws(Exception::class)
     override fun configure(http: HttpSecurity) {
         // Target URL
-        http
-                .authorizeRequests()
-                .mvcMatchers(*props.auth.excludesPath).permitAll()
-        http
-                .csrf().disable()
-                .authorizeRequests()
-                .mvcMatchers(*props.auth.pathAdmin).hasRole("ADMIN")
-                .mvcMatchers(*props.auth.path).hasRole("USER")
+        if (props.auth.enabled) {
+            http
+                    .authorizeRequests()
+                    .mvcMatchers(*props.auth.excludesPath.toTypedArray()).permitAll()
+            http
+                    .csrf().disable()
+                    .authorizeRequests()
+                    .mvcMatchers(*props.auth.pathAdmin.toTypedArray()).hasRole("ADMIN")
+                    .mvcMatchers(*props.auth.path.toTypedArray()).hasRole("USER")
+        } else {
+            // 認証無効時は全てのリクエストを許容
+            http
+                    .csrf().disable()
+                    .authorizeRequests()
+                    .mvcMatchers("/**").permitAll()
+        }
 
         // Common
         http
@@ -97,12 +110,10 @@ class SecurityConfigurer(
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         http
                 .addFilterAfter(ActorSessionFilter(actorSession), UsernamePasswordAuthenticationFilter::class.java)
-        if (corsFilter != null) {
-            http.addFilterBefore(corsFilter, LogoutFilter::class.java)
-        }
-        if (filters != null) {
-            for (filter in filters.filters()) {
-                http.addFilterAfter(filter, ActorSessionFilter::class.java)
+        corsFilter.ifAvailable { http.addFilterBefore(it, LogoutFilter::class.java) }
+        filters.ifAvailable { filters ->
+            filters.filters().forEach {
+                http.addFilterAfter(it, ActorSessionFilter::class.java)
             }
         }
 
@@ -125,24 +136,24 @@ class SecurityConfigurer(
  *
  * 主にパスワード照合を行っています。
  */
+@Component
 class SecurityProvider(
-        val actorFinder: SecurityActorFinder,
-        val encoder: PasswordEncoder
+        private val actorFinder: SecurityActorFinder,
+        private val encoder: PasswordEncoder
 ) : AuthenticationProvider {
 
-    @Throws(AuthenticationException::class)
     override fun authenticate(authentication: Authentication): Authentication {
-        if (authentication.getPrincipal() == null || authentication.getCredentials() == null) {
+        if (authentication.principal == null || authentication.credentials == null) {
             throw BadCredentialsException("ログイン認証に失敗しました")
         }
         val service = actorFinder.detailsService()
-        val details = service.loadUserByUsername(authentication.getPrincipal().toString())
-        val presentedPassword = authentication.getCredentials().toString()
+        val details = service.loadUserByUsername(authentication.principal.toString())
+        val presentedPassword = authentication.credentials.toString()
         if (!encoder.matches(presentedPassword, details.password)) {
             throw BadCredentialsException("ログイン認証に失敗しました")
         }
         val ret = UsernamePasswordAuthenticationToken(
-                authentication.getName(), "", details.authorities)
+                authentication.name, "", details.authorities)
         ret.details = details
         return ret
     }
@@ -157,27 +168,26 @@ class SecurityProvider(
  *
  * API化を念頭に例外発生時の実装差込をしています。
  */
+@Component
 class SecurityEntryPoint(
-        val msg: MessageSource
+        private val msg: MessageSource
 ) : AuthenticationEntryPoint {
 
-    @Throws(IOException::class, ServletException::class)
-    override fun commence(request: HttpServletRequest, response: HttpServletResponse,
-                          authException: AuthenticationException) {
+    override fun commence(
+            request: HttpServletRequest, response: HttpServletResponse, authException: AuthenticationException) {
         if (response.isCommitted) {
             return
         }
         if (authException is InsufficientAuthenticationException) {
             val message = msg.getMessage(ErrorKeys.AccessDenied, arrayOfNulls(0), Locale.getDefault())
-            writeReponseEmpty(response, HttpServletResponse.SC_FORBIDDEN, message)
+            writeResponseEmpty(response, HttpServletResponse.SC_FORBIDDEN, message)
         } else {
             val message = msg.getMessage(ErrorKeys.Authentication, arrayOfNulls(0), Locale.getDefault())
-            writeReponseEmpty(response, HttpServletResponse.SC_UNAUTHORIZED, message)
+            writeResponseEmpty(response, HttpServletResponse.SC_UNAUTHORIZED, message)
         }
     }
 
-    @Throws(IOException::class)
-    private fun writeReponseEmpty(response: HttpServletResponse, status: Int, message: String) {
+    private fun writeResponseEmpty(response: HttpServletResponse, status: Int, message: String) {
         response.contentType = MediaType.APPLICATION_JSON_VALUE
         response.status = status
         response.characterEncoding = "UTF-8"
@@ -190,11 +200,11 @@ class SecurityEntryPoint(
  *
  * dummyLoginが有効な時は常にSecurityContextHolderへAuthenticationを紐付けます。
  */
+@Component
 class ActorSessionFilter(
-        val actorSession: ActorSession
+        private val actorSession: ActorSession
 ) : GenericFilterBean() {
 
-    @Throws(IOException::class, ServletException::class)
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
         val authOpt = SecurityActorFinder.authentication()
         if (authOpt.isPresent && authOpt.get().details is ActorDetails) {
@@ -215,47 +225,40 @@ class ActorSessionFilter(
 /**
  * Spring Securityにおけるログイン/ログアウト時の振る舞いを拡張するHandler。
  */
-class LoginHandler(
-        val props: SecurityProperties
-) : AuthenticationSuccessHandler, AuthenticationFailureHandler, LogoutSuccessHandler {
+@Component
+class LoginHandler() : AuthenticationSuccessHandler, AuthenticationFailureHandler, LogoutSuccessHandler {
 
     /** ログイン成功処理  */
-    @Throws(IOException::class, ServletException::class)
-    override fun onAuthenticationSuccess(request: HttpServletRequest, response: HttpServletResponse,
-                                         authentication: Authentication) {
-        Optional.ofNullable(authentication.getDetails() as ActorDetails).ifPresent(
-                { detail -> detail.bindRequestInfo(request) })
+    override fun onAuthenticationSuccess(
+            request: HttpServletRequest, response: HttpServletResponse, authentication: Authentication) {
+        Optional.ofNullable(authentication.details as ActorDetails).ifPresent { it.bindRequestInfo(request) }
         if (response.isCommitted) {
             return
         }
-        writeReponseEmpty(response, HttpServletResponse.SC_OK)
+        writeResponseEmpty(response, HttpServletResponse.SC_OK)
     }
 
     /** ログイン失敗処理  */
-    @Throws(IOException::class, ServletException::class)
-    override fun onAuthenticationFailure(request: HttpServletRequest, response: HttpServletResponse,
-                                         exception: AuthenticationException) {
+    override fun onAuthenticationFailure(
+            request: HttpServletRequest, response: HttpServletResponse, exception: AuthenticationException) {
         if (response.isCommitted) {
             return
         }
-        writeReponseEmpty(response, HttpServletResponse.SC_BAD_REQUEST)
+        writeResponseEmpty(response, HttpServletResponse.SC_BAD_REQUEST)
     }
 
     /** ログアウト成功処理  */
-    @Throws(IOException::class, ServletException::class)
-    override fun onLogoutSuccess(request: HttpServletRequest, response: HttpServletResponse,
-                                 authentication: Authentication) {
+    override fun onLogoutSuccess(
+            request: HttpServletRequest, response: HttpServletResponse, authentication: Authentication) {
         if (response.isCommitted) {
             return
         }
-        writeReponseEmpty(response, HttpServletResponse.SC_OK)
+        writeResponseEmpty(response, HttpServletResponse.SC_OK)
     }
 
-    @Throws(IOException::class)
-    private fun writeReponseEmpty(response: HttpServletResponse, status: Int) {
+    private fun writeResponseEmpty(response: HttpServletResponse, status: Int) {
         response.contentType = MediaType.APPLICATION_JSON_VALUE
         response.status = status
         response.writer.write("{}")
     }
 }
-

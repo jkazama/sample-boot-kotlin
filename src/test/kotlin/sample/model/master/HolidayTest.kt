@@ -44,7 +44,7 @@ class HolidayTest : EntityTestSupport() {
     @Test
     fun 休日を登録する() {
         val items = listOf("2016-09-21", "2016-09-22", "2016-09-23")
-                .map({ RegHolidayItem(DateUtils.day(it), "休日") })
+                .map { RegHolidayItem(DateUtils.day(it), "休日") }
         tx {
             Holiday.register(rep(), RegHoliday(year = 2016, list = items))
             assertThat(Holiday.find(rep(), 2016), hasSize(3))

@@ -2,6 +2,7 @@ package sample.context.audit
 
 import org.apache.commons.lang3.StringUtils
 import org.hibernate.criterion.MatchMode
+import org.springframework.format.annotation.DateTimeFormat
 import sample.ActionStatusType
 import sample.context.Dto
 import sample.context.actor.Actor
@@ -15,7 +16,6 @@ import java.time.LocalDateTime
 import javax.persistence.*
 import javax.validation.constraints.NotNull
 
-
 /**
  * システム利用者の監査ログを表現します。
  */
@@ -25,30 +25,30 @@ data class AuditActor(
         @GeneratedValue
         var id: Long? = null,
         /** 利用者ID */
-        @IdStr
+        @field:IdStr
         var actorId: String,
         /** 利用者役割 */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         var roleType: ActorRoleType,
         /** 利用者ソース(IP等) */
         var source: String? = null,
         /** カテゴリ */
-        @Category
+        @field:Category
         var category: String? = null,
         /** メッセージ */
         var message: String,
         /** 処理ステータス */
-        @NotNull
+        @field:NotNull
         @Enumerated(EnumType.STRING)
         var statusType: ActionStatusType,
         /** エラー事由 */
-        @DescriptionEmpty
+        @field:DescriptionEmpty
         var errorReason: String? = null,
         /** 処理時間(msec) */
         var time: Long? = null,
         /** 開始日時 */
-        @NotNull
+        @field:NotNull
         var startDate: LocalDateTime,
         /** 終了日時(未完了時はnull) */
         var endDate: LocalDateTime? = null
@@ -99,7 +99,7 @@ data class AuditActor(
                             .equal("roleType", p.roleType)
                             .equal("statusType", p.statusType)
                             .like(arrayOf("message", "errorReason"), p.keyword, MatchMode.ANYWHERE)
-                            .between("startDate", p.fromDay.atStartOfDay(), DateUtils.dateTo(p.toDay))
+                            .between("startDate", p.fromDay!!.atStartOfDay(), DateUtils.dateTo(p.toDay!!))
                 }, p.page.sortIfEmpty(SortOrder.desc("startDate")))
     }
 
@@ -107,20 +107,22 @@ data class AuditActor(
 
 /** 検索パラメタ  */
 data class FindAuditActor(
-        @IdStrEmpty
+        @field:IdStrEmpty
         val actorId: String? = null,
-        @CategoryEmpty
+        @field:CategoryEmpty
         val category: String? = null,
-        @DescriptionEmpty
+        @field:DescriptionEmpty
         val keyword: String? = null,
-        @NotNull
+        @field:NotNull
         val roleType: ActorRoleType = ActorRoleType.User,
         val statusType: ActionStatusType? = null,
-        @ISODate
-        val fromDay: LocalDate,
-        @ISODate
-        val toDay: LocalDate,
-        @NotNull
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val fromDay: LocalDate? = null,
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val toDay: LocalDate? = null,
+        @field:NotNull
         val page: Pagination = Pagination()
 ) : Dto {
     companion object {

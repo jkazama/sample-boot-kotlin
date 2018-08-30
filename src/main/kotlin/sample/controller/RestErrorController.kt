@@ -17,17 +17,14 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 class RestErrorController(
-        val errorAttributes: ErrorAttributes
+        private val errorAttributes: ErrorAttributes
 ): ErrorController {
 
-    override fun getErrorPath(): String {
-        return PathError
-    }
+    override fun getErrorPath(): String = PathError
 
     @RequestMapping(PathError)
-    fun error(request: ServletWebRequest): Map<String, Any> {
-        return this.errorAttributes.getErrorAttributes(request, false)
-    }
+    fun error(request: ServletWebRequest): Map<String, Any> =
+        this.errorAttributes.getErrorAttributes(request, false)
 
     companion object {
         const val PathError = "/api/error"

@@ -8,7 +8,6 @@ import sample.model.account.Account
 import sample.model.account.Login
 import java.util.*
 
-
 /**
  * 口座ドメインに対する顧客ユースケース処理。
  */
@@ -20,15 +19,11 @@ class AccountService(
     /** ログイン情報を取得します。  */
     @Transactional(DefaultRepository.BeanNameTx)
     @Cacheable("AccountService.getLoginByLoginId")
-    fun getLoginByLoginId(loginId: String): Optional<Login> {
-        return Login.getByLoginId(rep, loginId)
-    }
+    fun getLoginByLoginId(loginId: String): Optional<Login> = Login.getByLoginId(rep, loginId)
 
     /** 有効な口座情報を取得します。  */
     @Transactional(DefaultRepository.BeanNameTx)
     @Cacheable("AccountService.getAccount")
-    fun getAccount(id: String): Optional<Account> {
-        return Account.getValid(rep, id)
-    }
+    fun getAccount(id: String): Optional<Account> = Account.getValid(rep, id)
 
 }

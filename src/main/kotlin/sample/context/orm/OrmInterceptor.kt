@@ -1,14 +1,16 @@
 package sample.context.orm
 
+import org.springframework.stereotype.Component
 import sample.context.Timestamper
 import sample.context.actor.ActorSession
 
 /**
  * Entityの永続化タイミングでAOP処理を差し込む Interceptor。
  */
-open class OrmInterceptor(
-        val session: ActorSession,
-        val time: Timestamper
+@Component
+class OrmInterceptor(
+        private val session: ActorSession,
+        private val time: Timestamper
 ) {
 
     /** 登録時の事前差し込み処理を行います。   */

@@ -171,7 +171,7 @@ class CashInOutTest : EntityTestSupport() {
                     hasProperty("statusType", `is`(ActionStatusType.Processed)),
                     hasProperty("cashflowId", not(nullValue()))))
             // 発生させたキャッシュフローの検証
-            assertThat(Cashflow.load(rep(), normal.cashflowId), allOf(
+            assertThat(Cashflow.load(rep(), normal.cashflowId!!), allOf(
                     hasProperty("accountId", `is`(accId)),
                     hasProperty("currency", `is`(ccy)),
                     hasProperty("amount", `is`(BigDecimal("-300"))),

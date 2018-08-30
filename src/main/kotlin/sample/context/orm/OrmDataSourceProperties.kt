@@ -1,8 +1,10 @@
 package sample.context.orm
 
 import com.zaxxer.hikari.HikariDataSource
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.jdbc.DataSourceBuilder
 import org.springframework.boot.jdbc.DatabaseDriver
+import org.springframework.context.annotation.Configuration
 import java.util.*
 import javax.sql.DataSource
 

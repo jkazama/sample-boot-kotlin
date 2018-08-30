@@ -15,31 +15,30 @@ import javax.persistence.Id
  * low: サンプルなので支店や名称、名義といったなど本来必須な情報をかなり省略しています。(通常は全銀仕様を踏襲します)
  */
 @Entity
-class SelfFiAccount(
+data class SelfFiAccount(
         /** ID  */
         @Id
         @GeneratedValue
         var id: Long? = null,
         /** 利用用途カテゴリ  */
-        @Category
+        @field:Category
         val category: String,
         /** 通貨  */
-        @Currency
+        @field:Currency
         val currency: String,
         /** 金融機関コード  */
-        @IdStr
+        @field:IdStr
         val fiCode: String,
         /** 金融機関口座ID  */
-        @IdStr
+        @field:IdStr
         val fiAccountId: String
 ) : OrmActiveRecord<SelfFiAccount>() {
 
     companion object {
         private const val serialVersionUID = 1L
 
-        fun load(rep: OrmRepository, category: String, currency: String): SelfFiAccount {
-            return rep.tmpl().load("FROM SelfFiAccount a WHERE a.category=?1 AND a.currency=?2", category, currency)
-        }
+        fun load(rep: OrmRepository, category: String, currency: String): SelfFiAccount =
+            rep.tmpl().load("FROM SelfFiAccount a WHERE a.category=?1 AND a.currency=?2", category, currency)
     }
 
 }

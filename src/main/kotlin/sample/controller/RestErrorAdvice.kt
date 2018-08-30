@@ -28,19 +28,18 @@ import java.util.*
 import javax.persistence.EntityNotFoundException
 import javax.validation.ConstraintViolationException
 
-
 /**
  * REST用の例外Map変換サポート。
  *
  * AOPアドバイスで全てのRestControllerに対して例外処理を当て込みます。
  */
-@ControllerAdvice(annotations = arrayOf(RestController::class))
+@ControllerAdvice(annotations = [RestController::class])
 class RestErrorAdvice(
-        val msg: MessageSource,
-        val session: ActorSession
+        private val msg: MessageSource,
+        private val session: ActorSession
 ) {
 
-    val log = LoggerFactory.getLogger(javaClass)
+    val log = LoggerFactory.getLogger(javaClass)!!
 
     /** Servlet例外  */
     @ExceptionHandler(ServletRequestBindingException::class)
@@ -49,9 +48,7 @@ class RestErrorAdvice(
         return ErrorHolder(msg, locale(), "error.ServletRequestBinding").result(HttpStatus.BAD_REQUEST)
     }
 
-    private fun locale(): Locale {
-        return session.actor().locale
-    }
+    private fun locale(): Locale = session.actor().locale
 
     /** メッセージ内容の読み込み失敗例外  */
     @ExceptionHandler(HttpMessageNotReadableException::class)
@@ -95,7 +92,7 @@ class RestErrorAdvice(
     fun handleConstraintViolation(e: ConstraintViolationException): ResponseEntity<Map<String, Array<String>>> {
         log.warn(e.message)
         val warns = Warns.init()
-        e.constraintViolations.forEach { warns.add(it.propertyPath.toString(), it.message) }
+        e.constraintViolations.forEach { warns.add(message = it.message, field = it.propertyPath.toString()) }
         return ErrorHolder(msg, locale(), warns.list).result(HttpStatus.BAD_REQUEST)
     }
 
@@ -125,22 +122,21 @@ class RestErrorAdvice(
                 field = bindField(oe.codes!![1])
             }
             val args = oe.arguments!!
-                    .filter({ it !is MessageSourceResolvable })
-                    .map(({ it.toString() }))
+                    .filter { it !is MessageSourceResolvable }
+                    .map { it.toString() }
             var message = oe.defaultMessage
             if (0 <= oe.codes!![0].indexOf("typeMismatch")) {
                 message = oe.codes!![2]
             }
-            warns.add(field, message, args.toTypedArray())
+            warns.add(message = message!!, field = field, messageArgs = args.toTypedArray())
         }
         return warns
     }
 
-    protected fun bindField(field: String): String {
-        return Optional.ofNullable(field)
-                .map({ v -> v.substring(v.indexOf('.') + 1) })
-                .orElse("")
-    }
+    protected fun bindField(field: String): String =
+            Optional.ofNullable(field)
+                    .map { it.substring(it.indexOf('.') + 1) }
+                    .orElse("")
 
     /** RestTemplate 例外時のブリッジサポート  */
     @ExceptionHandler(HttpClientErrorException::class)
@@ -159,14 +155,14 @@ class RestErrorAdvice(
 
     /** IO例外（Tomcatの Broken pipe はサーバー側の責務ではないので除外しています)  */
     @ExceptionHandler(IOException::class)
-    fun handleIOException(e: IOException): ResponseEntity<Map<String, Array<String>>> {
-        if (e.message != null && e.message!!.contains("Broken pipe")) {
-            log.info("クライアント事由で処理が打ち切られました。")
-            return ResponseEntity(HttpStatus.OK)
-        } else {
-            return handleException(e)
-        }
-    }
+    fun handleIOException(e: IOException): ResponseEntity<Map<String, Array<String>>> =
+            when (e.message != null && e.message!!.contains("Broken pipe")) {
+                true -> {
+                    log.info("クライアント事由で処理が打ち切られました。")
+                    ResponseEntity(HttpStatus.OK)
+                }
+                else -> handleException(e)
+            }
 
     /** 汎用例外  */
     @ExceptionHandler(Exception::class)
@@ -189,9 +185,9 @@ class RestErrorAdvice(
  * クライアント側は戻り値を [{"fieldA": "messageA"}, {"fieldB": "messageB"}]で受け取ります。
  */
 class ErrorHolder(
-        val msg: MessageSource,
-        val locale: Locale,
-        val errors: MutableMap<String, MutableList<String>> = mutableMapOf()
+        private val msg: MessageSource,
+        private val locale: Locale,
+        private val errors: MutableMap<String, MutableList<String>> = mutableMapOf()
 ) {
 
     constructor(msg: MessageSource, locale: Locale, e: ValidationException) : this(msg, locale, e.list) {}

@@ -15,7 +15,7 @@ data class Pagination(
         val sort: Sort = Sort()) : Dto {
 
     /** 最大ページ数を返します。total設定時のみ適切な値が返されます。 */
-    val maxPage: Int = if (total == null) 0 else Calculator.of(total).scale(0, RoundingMode.UP).divideBy(size).intValue
+    val maxPage: Int = if (total == null) 0 else Calculator.of(total).scale(0, RoundingMode.UP).divideBy(size).intValue()
     /** 開始件数を返します。 */
     val firstResult: Int = (page - 1) * size
 

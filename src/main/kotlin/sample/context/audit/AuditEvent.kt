@@ -2,11 +2,11 @@ package sample.context.audit
 
 import org.apache.commons.lang3.StringUtils
 import org.hibernate.criterion.MatchMode
+import org.springframework.format.annotation.DateTimeFormat
 import sample.ActionStatusType
 import sample.context.Dto
 import sample.context.orm.*
 import sample.model.constraints.DescriptionEmpty
-import sample.model.constraints.ISODate
 import sample.model.constraints.NameEmpty
 import sample.util.DateUtils
 import java.time.LocalDate
@@ -35,7 +35,7 @@ data class AuditEvent(
         /** 処理時間(msec) */
         var time: Long? = null,
         /** 開始日時 */
-        @NotNull
+        @field:NotNull
         var startDate: LocalDateTime,
         /** 終了日時(未完了時はnull) */
         var endDate: LocalDateTime? = null
@@ -84,7 +84,7 @@ data class AuditEvent(
                             .equal("category", p.category)
                             .equal("statusType", p.statusType)
                             .like(arrayOf("message", "errorReason"), p.keyword, MatchMode.ANYWHERE)
-                            .between("startDate", p.fromDay.atStartOfDay(), DateUtils.dateTo(p.toDay))
+                            .between("startDate", p.fromDay!!.atStartOfDay(), DateUtils.dateTo(p.toDay!!))
                 }, p.page.sortIfEmpty(SortOrder.desc("startDate")))
     }
 
@@ -92,27 +92,29 @@ data class AuditEvent(
 
 /** 検索パラメタ  */
 data class FindAuditEvent(
-        @NameEmpty
+        @field:NameEmpty
         val category: String? = null,
-        @DescriptionEmpty
+        @field:DescriptionEmpty
         val keyword: String? = null,
         val statusType: ActionStatusType? = null,
-        @ISODate
-        val fromDay: LocalDate,
-        @ISODate
-        val toDay: LocalDate,
-        @NotNull
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val fromDay: LocalDate? = null,
+        @field:NotNull
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        val toDay: LocalDate? = null,
+        @field:NotNull
         val page: Pagination = Pagination()
 ) : Dto {
 
     companion object {
-        private val serialVersionUID = 1L
+        private const val serialVersionUID = 1L
     }
 }
 
 /** 登録パラメタ  */
 data class RegAuditEvent(
-        @NameEmpty
+        @field:NameEmpty
         val category: String? = null,
         val message: String
 ) : Dto {
@@ -125,7 +127,7 @@ data class RegAuditEvent(
                     startDate = now)
 
     companion object {
-        private val serialVersionUID = 1L
+        private const val serialVersionUID = 1L
 
         fun of(message: String): RegAuditEvent =
                 of("default", message)

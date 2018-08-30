@@ -14,7 +14,7 @@ object ConvertUtils {
     /** 例外無しにLongへ変換します。(変換できない時はnull)  */
     fun quietlyLong(value: Any?): Long? {
         try {
-            return Optional.ofNullable(value).map({ java.lang.Long.parseLong(it.toString()) }).orElse(null)
+            return Optional.ofNullable(value).map { java.lang.Long.parseLong(it.toString()) }.orElse(null)
         } catch (e: NumberFormatException) {
             return null
         }
@@ -24,7 +24,7 @@ object ConvertUtils {
     /** 例外無しにIntegerへ変換します。(変換できない時はnull)  */
     fun quietlyInt(value: Any?): Int? {
         try {
-            return Optional.ofNullable(value).map({ Integer.parseInt(it.toString()) }).orElse(null)
+            return Optional.ofNullable(value).map { Integer.parseInt(it.toString()) }.orElse(null)
         } catch (e: NumberFormatException) {
             return null
         }
@@ -34,7 +34,7 @@ object ConvertUtils {
     /** 例外無しにBigDecimalへ変換します。(変換できない時はnull)  */
     fun quietlyDecimal(value: Any?): BigDecimal? {
         try {
-            return Optional.ofNullable(value).map({ BigDecimal(it.toString()) }).orElse(null)
+            return Optional.ofNullable(value).map { BigDecimal(it.toString()) }.orElse(null)
         } catch (e: NumberFormatException) {
             return null
         }
@@ -42,19 +42,19 @@ object ConvertUtils {
 
     /** 例外無しBooleanへ変換します。(変換できない時はfalse)  */
     fun quietlyBool(value: Any?): Boolean? =
-        Optional.ofNullable(value).map({ java.lang.Boolean.parseBoolean(it.toString()) }).orElse(false)
+            Optional.ofNullable(value).map { java.lang.Boolean.parseBoolean(it.toString()) }.orElse(false)
 
     /** 全角文字を半角にします。  */
     fun zenkakuToHan(text: String?): String? =
-        Optional.ofNullable(text).map({ ZenkakuToHan.transliterate(it) }).orElse(null)
+            Optional.ofNullable(text).map { ZenkakuToHan.transliterate(it) }.orElse(null)
 
     /** 半角文字を全角にします。  */
     fun hankakuToZen(text: String?): String? =
-        Optional.ofNullable(text).map({ HankakuToZen.transliterate(it) }).orElse(null)
+            Optional.ofNullable(text).map { HankakuToZen.transliterate(it) }.orElse(null)
 
     /** カタカナをひらがなにします。  */
     fun katakanaToHira(text: String?): String? =
-        Optional.ofNullable(text).map({ KatakanaToHira.transliterate(it) }).orElse(null)
+            Optional.ofNullable(text).map { KatakanaToHira.transliterate(it) }.orElse(null)
 
     /**
      * ひらがな/半角カタカナを全角カタカナにします。
@@ -62,7 +62,7 @@ object ConvertUtils {
      * low: 実際の挙動は厳密ではないので単体検証(ConvertUtilsTest)などで事前に確認して下さい。
      */
     fun hiraganaToZenKana(text: String?): String? =
-        Optional.ofNullable(text).map({ HiraganaToKana.transliterate(it) }).orElse(null)
+            Optional.ofNullable(text).map { HiraganaToKana.transliterate(it) }.orElse(null)
 
     /**
      * ひらがな/全角カタカナを半角カタカナにします。
@@ -70,7 +70,7 @@ object ConvertUtils {
      * low: 実際の挙動は厳密ではないので単体検証(ConvertUtilsTest)などで事前に確認して下さい。
      */
     fun hiraganaToHanKana(text: String?): String? =
-        zenkakuToHan(hiraganaToZenKana(text))
+            zenkakuToHan(hiraganaToZenKana(text))
 
     /** 指定した文字列を抽出します。(サロゲートペア対応)  */
     fun substring(text: String?, start: Int, end: Int): String? {
@@ -84,7 +84,7 @@ object ConvertUtils {
 
     /** 文字列を左から指定の文字数で取得します。(サロゲートペア対応)  */
     fun left(text: String?, len: Int): String? =
-        substring(text, 0, len)
+            substring(text, 0, len)
 
     /** 文字列を左から指定のバイト数で取得します。  */
     fun leftStrict(text: String?, lenByte: Int, charset: String): String? {

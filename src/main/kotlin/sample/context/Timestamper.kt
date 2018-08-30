@@ -10,9 +10,10 @@ import java.time.LocalDateTime
 /**
  * 日時ユーティリティコンポーネント。
  */
-open class Timestamper(
-        val clock: Clock = Clock.systemDefaultZone(),
-        val setting: AppSettingHandler? = null
+@Component
+class Timestamper(
+        private val clock: Clock = Clock.systemDefaultZone(),
+        private val setting: AppSettingHandler? = null
 ) {
     /** 営業日を返します。  */
     fun day(): LocalDate =

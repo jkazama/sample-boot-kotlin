@@ -1,5 +1,6 @@
 package sample.context.orm
 
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
@@ -15,8 +16,8 @@ import javax.sql.DataSource
 /** 標準スキーマのRepositoryを表現します。 */
 @Repository
 class DefaultRepository(
-        dh: DomainHelper,
-        interceptor: OrmInterceptor? = null,
+        dh: ObjectProvider<DomainHelper>,
+        interceptor: ObjectProvider<OrmInterceptor>,
         @PersistenceContext(unitName = BeanNameEmf)
         var em: EntityManager? = null
 ) : OrmRepository(dh, interceptor) {

@@ -1,9 +1,13 @@
 package sample.context.actor
 
+import org.springframework.stereotype.Component
+
 /**
  * スレッドローカルスコープの利用者セッション。
  */
-open class ActorSession(val actorLocal: ThreadLocal<Actor> = ThreadLocal()) {
+@Component
+class ActorSession() {
+
     /** 利用者セッションへ利用者を紐付けます。  */
     fun bind(actor: Actor): ActorSession {
         actorLocal.set(actor)
@@ -20,6 +24,10 @@ open class ActorSession(val actorLocal: ThreadLocal<Actor> = ThreadLocal()) {
     fun actor(): Actor {
         val actor = actorLocal.get()
         return actor ?: Actor.Anonymous
+    }
+
+    companion object {
+        private val actorLocal = ThreadLocal<Actor>()
     }
 
 }

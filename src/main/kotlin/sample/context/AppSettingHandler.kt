@@ -2,17 +2,18 @@ package sample.context
 
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import sample.context.orm.SystemRepository
 import java.util.*
 
-
 /**
  * アプリケーション設定情報に対するアクセス手段を提供します。
  */
-open class AppSettingHandler(
-        val rep: SystemRepository? = null,
-        val mockMap: Optional<MutableMap<String, String>> = Optional.empty()
+@Component
+class AppSettingHandler(
+        private val rep: SystemRepository? = null,
+        private val mockMap: Optional<MutableMap<String, String>> = Optional.empty()
 ) {
     /** アプリケーション設定情報を取得します。  */
     @Cacheable(cacheNames = ["AppSettingHandler.appSetting"], key = "#id")

@@ -21,6 +21,7 @@ import java.io.Serializable
  * }
  * </pre>
  */
+@Suppress("UNCHECKED_CAST")
 abstract class OrmActiveRecord<T : Entity> : Serializable, Entity {
 
     /** 審査処理をします。  */

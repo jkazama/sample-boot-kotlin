@@ -80,7 +80,7 @@ data class Account(
          */
         fun register(rep: OrmRepository, encoder: PasswordEncoder, p: RegAccount): Account {
             Validator.validate { v ->
-                v.checkField(!get(rep, p.id).isPresent(), "id", ErrorKeys.DuplicateId)
+                v.checkField(!get(rep, p.id).isPresent, "id", ErrorKeys.DuplicateId)
             }
             p.createLogin(encoder.encode(p.plainPassword)).save(rep)
             return p.create().save(rep)

@@ -37,6 +37,7 @@ object OrmUtils {
         }
 
     /** 指定したクラスのエンティティ情報を返します ( ID 概念含む )  */
+    @Suppress("UNCHECKED_CAST")
     fun <T> entityInformation(em: EntityManager, clazz: Class<T>): JpaEntityInformation<T, Serializable?> =
         JpaEntityInformationSupport.getEntityInformation(clazz, em) as JpaEntityInformation<T, Serializable?>
 

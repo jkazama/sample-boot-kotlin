@@ -49,6 +49,7 @@ class OrmCriteria<T>(
         return result { it }
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun result(extension: (CriteriaQuery<*>) -> CriteriaQuery<*>): CriteriaQuery<T> {
         var q: CriteriaQuery<T> = query.where(*predicates.toTypedArray())
         q = extension(q) as CriteriaQuery<T>
@@ -58,6 +59,7 @@ class OrmCriteria<T>(
     fun resultCount(): CriteriaQuery<Long> =
             resultCount { it }
 
+    @Suppress("UNCHECKED_CAST")
     fun resultCount(extension: (CriteriaQuery<*>) -> CriteriaQuery<*>): CriteriaQuery<Long> {
         val q = builder.createQuery(Long::class.java)
         q.from(entityClass).alias(alias)

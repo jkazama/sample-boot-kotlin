@@ -86,12 +86,6 @@ class ApplicationConfig {
         @Bean
         fun jsonHibernate5Module(): Hibernate5Module = Hibernate5Module()
 
-        @Bean
-        fun javaTimeModule(mapper: ObjectMapper): JavaTimeModule {
-            val modules = mapper.findAndRegisterModules()
-            return JavaTimeModule()
-        }
-
         /** BeanValidationメッセージのUTF-8に対応したValidator。  */
         @Bean
         fun defaultValidator(message: MessageSource): LocalValidatorFactoryBean {

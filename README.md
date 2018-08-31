@@ -3,8 +3,8 @@ sample-boot-kotlin
 
 ### はじめに
 
-[Spring Boot](http://projects.spring.io/spring-boot/) / [Spring Security](http://projects.spring.io/spring-security/) / [Hibernate ORM](http://hibernate.org/orm/) を元にした DDD サンプル実装です。  
-ベーシックな基盤は [ddd-java](https://github.com/jkazama/ddd-java) から流用しています。  
+[Spring Boot](http://projects.spring.io/spring-boot/) / [Spring Security](http://projects.spring.io/spring-security/) / [Kotlin](https://kotlinlang.org/) を元にした DDD サンプル実装です。  
+ベーシックな基盤は Java 版である [sample-boot-hibernate](https://github.com/jkazama/sample-boot-hibernate) から流用しています。  
 フレームワークではないので、 Spring Boot を利用するプロジェクトを立ち上げる際に元テンプレートとして利用して下さい。
 
 考え方の骨子については以前発表した資料 ( [Spring Bootを用いたドメイン駆動設計](http://www.slideshare.net/jkazama/jsug-20141127) ) を参照してください。
@@ -35,23 +35,29 @@ UI 層の公開処理は通常 JSP や Thymeleaf を用いて行いますが、�
 Spring Boot は様々な利用方法が可能ですが、本サンプルでは以下のポリシーで利用します。
 
 - 設定ファイルは yml を用いる。 Bean 定義に xml 等の拡張ファイルは用いない。
-- インフラ層のコンポーネントは @Bean で、 それ以外のコンポーネントは @Component 等でベタに登録していく。
+- 登録するBeanは起動速度/保守性の両面からコンポーネントスキャンは限定し、他は定義クラスで補完
     - `ApplicationConfig` / `ApplicationDbConfig` / `ApplicationSecurityConfig`
+    - `controller` / `usecase` 配下のみ自動スキャンを有効に
 - 例外処理は終端 ( RestErrorAdvice / RestErrorCotroller ) で定義。 whitelabel 機能は無効化。
 - JPA 実装として Hibernate に特化。
 - Spring Security の認証方式はベーシック認証でなく、昔からよくある HttpSession で。
 - 基礎的なユーティリティで Spring がサポートしていないのは簡易な実装を用意。
 
-#### Java コーディング方針
+#### Kotlin コーディング方針
 
-Java8 以上を前提としていますが、従来の Java で推奨される記法と異なっている観点も多いです。  
-以下は保守性を意識した上で簡潔さを重視した方針となっています。
+- GradleのKotlinプラグインを積極的に利用
+    - `kotlin-spring` / `kotlin-jpa`
+- DIコンテナへ配置するシングルトンな Bean は通常 class で定義し @Component を付与
+    - `kotlin-spring` の恩恵で open が自動的に適用される
+- 要求引数や戻り値、エンティティ等のデータ転送オブジェクト(DTO)は data class で定義
+- DI はコンストラクタインジェクションを中心におこなう
+- Bean Validation アノテーションがそのままだとうまく適用されないので @field を付与
+    - 拡張Bean Validation アノテーションは作り方が良く分からなかったためjavaの方で作成
+- Bean Validation を利用するDTOクラスのフィールドは全て null を許容
+    - 評価する際に null 状態を一次的に受け入れる必要があるため
+- Entityにおいては副作用ある処理を許容し、業務要求となるDTO引数などでは許容しない
+    - Entityへ副作用を与える要求は全て業務メソッド経由に集約する
 
-- Lombok を積極的に利用して冗長さを排除。
-- 名称も既存クラスと重複しても良いのでなるべく簡潔に。
-- インターフェースの濫用をしない。
-- ドメインの一部となる DTO などは内部クラスで表現。
-- Java8 で追加された概念/記法は積極的に利用。
 
 #### パッケージ構成
 
@@ -59,14 +65,14 @@ Java8 以上を前提としていますが、従来の Java で推奨される�
 
 ```
 main
-  java
+  kotlin
     sample
       context                         … インフラ層
       controller                      … UI 層
       model                           … ドメイン層
       usecase                         … アプリケーション層
       util                            … 汎用ユーティリティ
-      - Application.java              … 実行可能な起動クラス
+      - Application.kt                … 実行可能な起動クラス
   resources
     - application.yml                 … 設定ファイル
     - ehcache.xml                     … Spring Cache 設定ファイル
@@ -90,29 +96,17 @@ main
 
 *※ライブラリダウンロードなどが自動で行われるため、インターネット接続が可能な端末で実行してください。*
 
-#### サーバ起動 （ Eclipse ）
+#### サーバ起動 （ IntelliJ IDEA ）
 
-開発IDEである[Eclipse](https://eclipse.org/)で本サンプルを利用するには、事前に以下の手順を行っておく必要があります。
+[IntelliJ IDEA](https://www.jetbrains.com/idea/)を利用して起動するには、次の手順で本サンプルをプロジェクト化してください。  
 
-- JDK8 以上のインストール
-- [Lombok](http://projectlombok.org/download.html) のパッチ当て ( .jar を実行してインストーラの指示通りに実行 )
-
-> 以降は Gradle Plugin [ Buildship ] の利用を前提としているため、 Eclipse Mars 以降を推奨します。
-
-次の手順で本サンプルをプロジェクト化してください。  
-
-1. パッケージエクスプローラから 「 右クリック -> Import -> Project 」 で *Gradle Project* を選択して *Next* を押下
-1. *Project root directory* にダウンロードした *sample-boot-hibernate* ディレクトリを指定して *Next* を押下
-1. *Import Options* で *Next* を押下
-1. *Gradle project structure* に *sample-boot-hibernate* が表示されたら *Finish* を押下 ( 依存ライブラリダウンロードがここで行われます )
+1. 「 File -> New -> Project From Existing Sources... 」 で本サンプルの build.gradle を選択して *OK* を押下
 
 次の手順で本サンプルを実行してください。
 
-1. *Application.java* に対し 「 右クリック -> Run As -> Java Application 」
+1. *Application.kt* に対し 「 右クリック -> Run `sample.Application.kt...` 」
 1. *Console* タブに 「 Started Application 」 という文字列が出力されればポート 8080 で起動が完了
-1. ブラウザを立ち上げて 「 http://localhost:8080/api/management/health 」 で状態を確認
-
-> STS (Spring Tool Suite) のプラグインを利用すると上記 main クラスを GUI の Boot Dashboard 経由で簡単に実行できます。
+1. ブラウザを立ち上げて 「 http://localhost:8080/management/health 」 で状態を確認
 
 #### サーバ起動 （ コンソール ）
 
@@ -120,10 +114,10 @@ Windows / Mac のコンソールから実行するには Gradle のコンソー�
 
 *※事前に JDK8 以上のインストールが必要です。*
 
-1. ダウンロードした *sample-boot-hibernate* ディレクトリ直下へコンソールで移動
+1. ダウンロードした *sample-boot-kotlin* ディレクトリ直下へコンソールで移動
 1. 「 gradlew bootRun 」 を実行
 1. コンソールに 「 Started Application 」 という文字列が出力されればポート 8080 で起動が完了
-1. ブラウザを立ち上げて 「 http://localhost:8080/api/management/health 」 で状態を確認
+1. ブラウザを立ち上げて 「 http://localhost:8080/management/health 」 で状態を確認
 
 #### クライアント検証
 
@@ -166,15 +160,6 @@ Spring Boot では Executable Jar ( ライブラリや静的リソースなど�
 
 > 実行引数に 「 --spring.profiles.active=[プロファイル名]」 を追加する事で application.yml の設定値をプロファイル単位に変更できます。
 
-### 本サンプルを元にしたプロジェクトリソースの作成
-
-本サンプルを元にしたプロジェクトリソースを作成したい場合は以下の手順を実行してください。
-
-1. build.gradle 内の拡張タスク ( copyProject ) の上部に定義されている変数を修正
-1. コンソールから 「 gradlew copyProject 」 を実行
-
-以降のプロジェクトインポート手順は前述のものと同様となります。
-
 ### 依存ライブラリ
 
 | ライブラリ               | バージョン | 用途/追加理由 |
@@ -192,7 +177,7 @@ Spring Boot では Executable Jar ( ライブラリや静的リソースなど�
 
 インフラ層の簡単な解説です。
 
-※細かい概要は実際にコードを読むか、 「 `gradlew javadoc` 」 を実行して 「 `build/docs` 」 に出力されるドキュメントを参照してください
+※より詳細な概要についてはコードに記載されているコメントを参照してください
 
 #### DB / トランザクション
 
@@ -228,7 +213,9 @@ Spring Boot では Executable Jar ( ライブラリや静的リソースなど�
 
 #### テスト
 
-パターンとしては通常の Spring コンテナを用いるコンテナテストと、 Hibernate だけに閉じた実行時間に優れたテスト ( Entity のみが対象 ) の合計 2 パターンで考えます。 （ それぞれ基底クラスは `UnitTestSupport` / `EntityTestSupport` ）  
+パターンとしては通常の JUnitテストと、 Hibernate だけに閉じたEntityテスト（基底クラスは `EntityTestSupport` ）の合計 2 パターンで考えます。  
+
+> Springのコンテナを利用したテストはコストが高くなりがちなので、ここではおこないません。
 
 ### License
 

@@ -16,6 +16,7 @@ import javax.persistence.criteria.CriteriaQuery
  * JPA の EntityManager に対する簡易アクセサ。 ( セッション毎に生成して利用してください )
  * <p>EntityManager のメソッドで利用したい処理があれば必要に応じてラップメソッドを追加してください。
  */
+@Suppress("UNCHECKED_CAST")
 class OrmTemplate(
         val em: EntityManager,
         val metadata: Optional<OrmQueryMetadata> = Optional.empty()) {

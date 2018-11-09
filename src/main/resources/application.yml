@@ -10,9 +10,6 @@ spring:
     max-file-size: 20MB
     max-request-size: 20MB
   jpa.open-in-view: false
-  security.user.password: unused
-  autoconfigure.exclude:
-    - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
 logging.config: classpath:logback-spring.xml
 

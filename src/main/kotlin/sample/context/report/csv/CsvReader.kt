@@ -83,7 +83,7 @@ class CsvReader(val data: ByteArray?, val ins: InputStream?, val layout: CsvLayo
         val qt = layout.quote
         val eol = layout.eolSymbols
         val sb = StringBuilder()
-        var cp = -1
+        var cp: Int
         while (run { cp = nextCodePoint(reader); cp != -1}) {
             sb.appendCodePoint(cp)
             if (qt.toInt() == cp) {

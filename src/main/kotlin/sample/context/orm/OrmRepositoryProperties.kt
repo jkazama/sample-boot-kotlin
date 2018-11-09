@@ -1,5 +1,6 @@
 package sample.context.orm
 
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateSettings
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder
@@ -16,7 +17,8 @@ data class OrmRepositoryProperties(
         /** スキーマ紐付け対象とするパッケージ。(annotatedClassesとどちらかを設定) */
         var packageToScan: Collection<String> = listOf(),
         /** Entityとして登録するクラス。(packageToScanとどちらかを設定) */
-        var annotatedClasses: Collection<Class<*>> = listOf()
+        var annotatedClasses: Collection<Class<*>> = listOf(),
+        var hibernate: HibernateProperties = HibernateProperties()
 ) : JpaProperties() {
 
     fun entityManagerFactoryBean(name: String, dataSource: DataSource): LocalContainerEntityManagerFactoryBean {
@@ -25,7 +27,7 @@ data class OrmRepositoryProperties(
         val builder = emfBuilder
                 .dataSource(dataSource)
                 .persistenceUnit(name)
-                .properties(getHibernateProperties(HibernateSettings()))
+                .properties(hibernate.determineHibernateProperties(getProperties(), HibernateSettings()))
                 .jta(false)
         if (annotatedClasses.isNotEmpty()) {
             builder.packages(*annotatedClasses.toTypedArray())

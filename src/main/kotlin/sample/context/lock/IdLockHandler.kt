@@ -32,32 +32,24 @@ class IdLockHandler() {
     }
 
     private fun writeLock(id: Serializable) {
-        synchronized(lockMap) {
-            idLock(id).writeLock().lock()
-        }
+        idLock(id).writeLock().lock()
     }
 
-    private fun idLock(id: Serializable): ReentrantReadWriteLock {
-        if (!lockMap.containsKey(id)) {
-            lockMap[id] = ReentrantReadWriteLock()
+    private fun idLock(id: Serializable): ReentrantReadWriteLock =
+        lockMap.computeIfAbsent(id) {
+            ReentrantReadWriteLock()
         }
-        return lockMap[id]!!
-    }
 
     fun readLock(id: Serializable) {
-        synchronized(lockMap) {
-            idLock(id).readLock().lock()
-        }
+        idLock(id).readLock().lock()
     }
 
     fun unlock(id: Serializable) {
-        synchronized(lockMap) {
-            val idLock = idLock(id)
-            if (idLock.isWriteLockedByCurrentThread) {
-                idLock.writeLock().unlock()
-            } else {
-                idLock.readLock().unlock()
-            }
+        val idLock = idLock(id)
+        if (idLock.isWriteLockedByCurrentThread) {
+            idLock.writeLock().unlock()
+        } else {
+            idLock.readLock().unlock()
         }
     }
 

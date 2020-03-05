@@ -25,9 +25,8 @@ class AssetController(private val service: AssetService) {
 
     /** 未処理の振込依頼情報を検索します。  */
     @GetMapping("/cio/unprocessedOut/")
-    fun findUnprocessedCashOut(): List<CashOutUI> {
-        return service.findUnprocessedCashOut().map { CashOutUI.of(it) }
-    }
+    fun findUnprocessedCashOut(): List<CashOutUI> =
+        service.findUnprocessedCashOut().map { CashOutUI.of(it) }
 
     /**
      * 振込出金依頼をします。

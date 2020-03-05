@@ -27,17 +27,15 @@ class AccountController(
 
     /** 口座ログイン情報を取得します。  */
     @GetMapping("/loginAccount")
-    fun loadLoginAccount(): LoginAccount {
+    fun loadLoginAccount(): LoginAccount =
         if (securityProps.auth.enabled) {
             val actorDetails = SecurityActorFinder.actorDetails()
-                    .orElseThrow({ ValidationException(ErrorKeys.Authentication) })
+                    .orElseThrow { ValidationException(ErrorKeys.Authentication) }
             val actor = actorDetails.actor
-            return LoginAccount(actor.id, actor.name, actorDetails.authorityIds)
+            LoginAccount(actor.id, actor.name, actorDetails.authorityIds)
         } else { // for dummy login
-            return LoginAccount("sample", "sample", listOf())
+            LoginAccount("sample", "sample", listOf())
         }
-    }
-
 }
 
 /** クライアント利用用途に絞ったパラメタ  */

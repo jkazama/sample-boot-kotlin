@@ -1,11 +1,11 @@
 ---
 spring:
-  application.name: sample-boot-hibernate
+  application.name: sample-boot-scala
   messages.basename: messages-validation, messages
   banner.location: banner.txt
   cache.jcache.config: classpath:ehcache.xml
   jackson.serialization:
-      indent-output: true
+    indent-output: true
   servlet.multipart:
     max-file-size: 20MB
     max-request-size: 20MB

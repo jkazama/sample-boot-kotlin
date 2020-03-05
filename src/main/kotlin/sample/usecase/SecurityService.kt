@@ -21,8 +21,8 @@ class SecurityService {
 
     /** 一般利用者情報を提供します。(see SecurityActorFinder)  */
     @Bean
-    fun securityUserService(service: AccountService): SecurityUserService {
-        return object : SecurityUserService {
+    fun securityUserService(service: AccountService): SecurityUserService =
+        object : SecurityUserService {
             /**
              * 以下の手順で利用口座を特定します。
              *
@@ -44,12 +44,11 @@ class SecurityService {
                                 }
                             }.orElseThrow { UsernameNotFoundException(ErrorKeys.Login) }
         }
-    }
 
     /** 社内管理向けの利用者情報を提供します。(see SecurityActorFinder)  */
     @Bean
-    fun securityAdminService(service: MasterAdminService): SecurityAdminService {
-        return object : SecurityAdminService {
+    fun securityAdminService(service: MasterAdminService): SecurityAdminService =
+        object : SecurityAdminService {
             /**
              * 以下の手順で社員を特定します。
              *
@@ -70,5 +69,5 @@ class SecurityService {
                                 }
                             }.orElseThrow({ UsernameNotFoundException(ErrorKeys.Login) })
         }
-    }
+
 }

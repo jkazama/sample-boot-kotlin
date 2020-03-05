@@ -5,6 +5,7 @@ import org.springframework.http.HttpMethod
 import com.sun.corba.se.impl.protocol.giopmsgheaders.MessageBase.createRequest
 import org.apache.commons.io.IOUtils
 import org.junit.FixMethodOrder
+import org.junit.Ignore
 import org.junit.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.client.ClientHttpRequest
@@ -23,6 +24,7 @@ import java.util.*
  * falseの時はDummyLoginInterceptorによる擬似ログインが行われます。
  */
 @FixMethodOrder
+@Ignore // 実行時はこの行をコメントアウトしてください。
 class SampleClient {
 
     // 「extention.security.auth.admin: false」の時のみ利用可能です。

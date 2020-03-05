@@ -206,7 +206,7 @@ class ErrorHolder(
     }
 
     /** グローバルな例外(フィールドキーが空)を追加します。  */
-    fun errorGlobalOrDefault(msgKey: String, defaultMsg: String, vararg msgArgs: String): ErrorHolder {
+    private fun errorGlobalOrDefault(msgKey: String, defaultMsg: String, vararg msgArgs: String): ErrorHolder {
         if (!errors.containsKey("")) {
             errors[""] = mutableListOf()
         }
@@ -215,7 +215,7 @@ class ErrorHolder(
     }
 
     /** グローバルな例外(フィールドキーが空)を追加します。  */
-    fun errorGlobal(msgKey: String, vararg msgArgs: String): ErrorHolder =
+    private fun errorGlobal(msgKey: String, vararg msgArgs: String): ErrorHolder =
             errorGlobalOrDefault(msgKey, msgKey, *msgArgs)
 
     /** フィールド単位の例外を追加します。  */

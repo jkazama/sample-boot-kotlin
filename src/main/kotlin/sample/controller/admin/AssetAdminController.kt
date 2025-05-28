@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController
 import sample.model.asset.CashInOut
 import sample.model.asset.FindCashInOut
 import sample.usecase.admin.AssetAdminService
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 /**
  * 資産に関わる社内のUI要求を処理します。

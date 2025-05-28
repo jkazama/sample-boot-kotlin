@@ -1,12 +1,6 @@
 package sample
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import org.springframework.boot.actuate.health.AbstractHealthIndicator
-import org.springframework.boot.actuate.health.Health
-import org.springframework.boot.actuate.health.HealthIndicator
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -29,64 +23,53 @@ import sample.model.DataFixtures
 import sample.model.HolidayAccessor
 
 /**
- * アプリケーションにおけるBean定義を表現します。
- * <p>controller / usecase 以外のコンポーネントはこちらで明示的に定義しています。
+ * アプリケーションにおけるBean定義を表現します。 <p>controller / usecase 以外のコンポーネントはこちらで明示的に定義しています。
  * <p>依存コンポーネントが多いものについては Import を併用しています。
  */
 @Configuration
 class ApplicationConfig {
 
-    /** インフラ層 ( context 配下) のコンポーネント定義を表現します  */
+    /** インフラ層 ( context 配下) のコンポーネント定義を表現します */
     @Configuration
     @Import(DomainHelper::class)
     internal class PlainConfig {
-        @Bean
-        fun timestamper(): Timestamper = Timestamper()
+        @Bean fun timestamper(): Timestamper = Timestamper()
 
-        @Bean
-        fun actorSession(): ActorSession = ActorSession()
+        @Bean fun actorSession(): ActorSession = ActorSession()
 
-        @Bean
-        fun resourceBundleHandler(): ResourceBundleHandler = ResourceBundleHandler()
+        @Bean fun resourceBundleHandler(): ResourceBundleHandler = ResourceBundleHandler()
 
         @Bean
         fun appSettingHandler(rep: SystemRepository): AppSettingHandler = AppSettingHandler(rep)
 
         @Bean
-        fun auditHandler(session: ActorSession,  persister: AuditPersister): AuditHandler = AuditHandler(session, persister)
+        fun auditHandler(session: ActorSession, persister: AuditPersister): AuditHandler =
+                AuditHandler(session, persister)
 
-        @Bean
-        fun auditPersister(rep: SystemRepository): AuditPersister = AuditPersister(rep)
+        @Bean fun auditPersister(rep: SystemRepository): AuditPersister = AuditPersister(rep)
 
-        @Bean
-        fun idLockHandler(): IdLockHandler = IdLockHandler()
+        @Bean fun idLockHandler(): IdLockHandler = IdLockHandler()
 
-        @Bean
-        fun mailHandler(): MailHandler = MailHandler()
+        @Bean fun mailHandler(): MailHandler = MailHandler()
 
-        @Bean
-        fun reportHandler(): ReportHandler = ReportHandler()
-
+        @Bean fun reportHandler(): ReportHandler = ReportHandler()
     }
 
-    /** ドメイン層 ( model 配下) のコンポーネント定義を表現します  */
+    /** ドメイン層 ( model 配下) のコンポーネント定義を表現します */
     @Configuration
     @Import(BusinessDayHandler::class, DataFixtures::class)
     internal class DomainConfig {
 
-        @Bean
-        fun holidayAccessor(rep: DefaultRepository): HolidayAccessor =
-                HolidayAccessor(rep)
+        @Bean fun holidayAccessor(rep: DefaultRepository): HolidayAccessor = HolidayAccessor(rep)
     }
 
     @Configuration
     internal class WebMVCConfig {
 
-        /** HibernateのLazyLoading回避対応。  see JacksonAutoConfiguration  */
-        @Bean
-        fun jsonHibernate5Module(): Hibernate5Module = Hibernate5Module()
+        /** HibernateのLazyLoading回避対応。 see JacksonAutoConfiguration */
+        @Bean fun jsonHibernate6Module(): Hibernate6Module = Hibernate6Module()
 
-        /** BeanValidationメッセージのUTF-8に対応したValidator。  */
+        /** BeanValidationメッセージのUTF-8に対応したValidator。 */
         @Bean
         fun defaultValidator(message: MessageSource): LocalValidatorFactoryBean {
             val factory = LocalValidatorFactoryBean()
@@ -94,5 +77,4 @@ class ApplicationConfig {
             return factory
         }
     }
-
 }

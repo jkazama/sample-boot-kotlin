@@ -1,38 +1,32 @@
 package sample.context
 
-import org.hibernate.criterion.MatchMode
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.validation.constraints.Size
+import java.math.BigDecimal
+import java.util.*
+import sample.context.orm.MatchMode
 import sample.context.orm.OrmActiveRecord
 import sample.context.orm.OrmRepository
 import sample.model.constraints.OutlineEmpty
-import java.math.BigDecimal
-import java.util.*
-import javax.persistence.Entity
-import javax.persistence.Id
-import javax.validation.constraints.Size
-
 
 /**
- * アプリケーション設定情報を表現します。
- * <p>事前に初期データが登録される事を前提とし、値の変更のみ許容します。
+ * Represents application setting information. <p>Assumes initial data is registered in advance and
+ * only allows value changes.
  */
 @Entity
 data class AppSetting(
-        /** 設定ID */
-        @Id
-        @field:Size(max = 120)
-        val id: String,
-        /** 区分 */
-        @field:Size(max = 60)
-        var category: String,
-        /** 概要 */
-        @field:Size(max = 1300)
-        var outline: String,
-        /** 値 */
-        @field:Size(max = 1300)
-        var value: String?
+        /** Setting ID */
+        @Id @field:Size(max = 120) val id: String,
+        /** Category */
+        @field:Size(max = 60) var category: String,
+        /** Outline */
+        @field:Size(max = 1300) var outline: String,
+        /** Value */
+        @field:Size(max = 1300) var value: String?
 ) : OrmActiveRecord<AppSetting>() {
 
-    /** 設定情報値を取得します。  */
+    /** Gets the setting information value. */
     fun str(): String = value!!
 
     fun str(defaultValue: String): String {
@@ -41,21 +35,20 @@ data class AppSetting(
 
     fun intValue(): Int = value!!.toInt()
     fun intValue(defaultValue: Int): Int =
-        if (value == null) defaultValue else  Integer.parseInt(value)
+            if (value == null) defaultValue else Integer.parseInt(value)
 
     fun longValue(): Long = value!!.toLong()
-    fun longValue(defaultValue: Long): Long =
-        if (value == null) defaultValue else value!!.toLong()
+    fun longValue(defaultValue: Long): Long = if (value == null) defaultValue else value!!.toLong()
 
     fun bool(): Boolean = value!!.toBoolean()
     fun bool(defaultValue: Boolean): Boolean =
-        if (value == null) defaultValue else value!!.toBoolean()
+            if (value == null) defaultValue else value!!.toBoolean()
 
     fun decimal(): BigDecimal = BigDecimal(value)
     fun decimal(defaultValue: BigDecimal): BigDecimal =
-        if (value == null) defaultValue else BigDecimal(value)
+            if (value == null) defaultValue else BigDecimal(value)
 
-    /** 設定情報値を設定します。  */
+    /** Sets the setting information value. */
     fun update(rep: OrmRepository, value: String): AppSetting {
         this.value = value
         return update(rep)
@@ -64,7 +57,7 @@ data class AppSetting(
     companion object {
         private const val serialVersionUID: Long = 1
 
-        /** 設定情報を取得します。  */
+        /** Gets setting information. */
         fun get(rep: OrmRepository, id: String): Optional<AppSetting> {
             return rep.get(AppSetting::class.java, id)
         }
@@ -73,18 +66,14 @@ data class AppSetting(
             return rep.load(AppSetting::class.java, id)
         }
 
-        /** アプリケーション設定情報を検索します。  */
+        /** Searches application setting information. */
         fun find(rep: OrmRepository, p: FindAppSetting): List<AppSetting> {
             return rep.tmpl().findByCriteria(AppSetting::class.java) { criteria ->
-                criteria
-                        .like(arrayOf("id", "category", "outline"), p.keyword, MatchMode.ANYWHERE)
+                criteria.like(arrayOf("id", "category", "outline"), p.keyword, MatchMode.ANYWHERE)
                         .result()
             }
         }
     }
 }
 
-data class FindAppSetting(
-        @field:OutlineEmpty
-        val keyword: String? = null
-)
+data class FindAppSetting(@field:OutlineEmpty val keyword: String? = null)

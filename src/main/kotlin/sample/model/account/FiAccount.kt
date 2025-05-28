@@ -5,9 +5,9 @@ import sample.context.orm.OrmRepository
 import sample.model.constraints.Category
 import sample.model.constraints.Currency
 import sample.model.constraints.IdStr
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
 
 /**
  * 口座に紐づく金融機関口座を表現します。

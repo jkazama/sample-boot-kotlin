@@ -3,7 +3,7 @@ package sample.controller.filter
 import org.springframework.context.annotation.Configuration
 import sample.context.security.SecurityFilters
 import java.util.ArrayList
-import javax.servlet.Filter
+import jakarta.servlet.Filter
 
 /**
  * ServletFilterの拡張実装。

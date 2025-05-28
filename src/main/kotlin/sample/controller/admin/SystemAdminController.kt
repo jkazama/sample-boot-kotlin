@@ -10,7 +10,7 @@ import sample.context.audit.FindAuditActor
 import sample.context.audit.FindAuditEvent
 import sample.context.orm.PagingList
 import sample.usecase.admin.SystemAdminService
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 /**
  * システムに関わる社内のUI要求を処理します。

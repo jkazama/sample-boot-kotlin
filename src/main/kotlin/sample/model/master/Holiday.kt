@@ -9,11 +9,11 @@ import sample.util.DateUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
-import javax.validation.Valid
-import javax.validation.constraints.NotNull
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotNull
 
 
 /**

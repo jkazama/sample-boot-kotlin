@@ -1,25 +1,25 @@
 package sample.context.orm
 
+import jakarta.persistence.EntityManager
+import jakarta.persistence.Query
+import jakarta.persistence.StoredProcedureQuery
+import jakarta.persistence.TypedQuery
+import jakarta.persistence.criteria.CriteriaQuery
+import java.io.Serializable
+import java.util.*
 import org.springframework.util.Assert
 import sample.ErrorKeys
 import sample.ValidationException
-import java.io.Serializable
-import java.util.*
-import javax.persistence.EntityManager
-import javax.persistence.Query
-import javax.persistence.StoredProcedureQuery
-import javax.persistence.TypedQuery
-import javax.persistence.criteria.CriteriaQuery
-
 
 /**
- * JPA の EntityManager に対する簡易アクセサ。 ( セッション毎に生成して利用してください )
- * <p>EntityManager のメソッドで利用したい処理があれば必要に応じてラップメソッドを追加してください。
+ * JPA の EntityManager に対する簡易アクセサ。 ( セッション毎に生成して利用してください ) <p>EntityManager
+ * のメソッドで利用したい処理があれば必要に応じてラップメソッドを追加してください。
  */
 @Suppress("UNCHECKED_CAST")
 class OrmTemplate(
         val em: EntityManager,
-        val metadata: Optional<OrmQueryMetadata> = Optional.empty()) {
+        val metadata: Optional<OrmQueryMetadata> = Optional.empty()
+) {
 
     private fun <T> query(query: CriteriaQuery<T>): TypedQuery<T> {
         val q = em.createQuery(query)
@@ -30,33 +30,33 @@ class OrmTemplate(
         return q
     }
 
-    /** 指定したエンティティの ID 値を取得します。  */
+    /** 指定したエンティティの ID 値を取得します。 */
     fun <T> idValue(entity: T): Serializable? {
         val clazz: Class<T> = (entity as Any).javaClass as Class<T>
         return OrmUtils.entityInformation(em, clazz).getId(entity)
     }
 
-    /** Criteriaで一件取得します。  */
+    /** Criteriaで一件取得します。 */
     fun <T> getByCriteria(criteria: CriteriaQuery<T>): Optional<T> =
-        findByCriteria(criteria).stream().findFirst()
+            findByCriteria(criteria).stream().findFirst()
 
-    /** Criteriaで一件取得します。(存在しない時はValidationException)  */
+    /** Criteriaで一件取得します。(存在しない時はValidationException) */
     fun <T> loadByCriteria(criteria: CriteriaQuery<T>): T =
-        getByCriteria(criteria).orElseThrow { ValidationException(ErrorKeys.EntityNotFound) }
+            getByCriteria(criteria).orElseThrow { ValidationException(ErrorKeys.EntityNotFound) }
 
-    /**
-     * Criteria で検索します。
-     * ※ランダムな条件検索等、可変条件検索が必要となる時に利用して下さい
-     */
-    fun <T> findByCriteria(criteria: CriteriaQuery<T>): List<T> =
-        query(criteria).resultList
+    /** Criteria で検索します。 ※ランダムな条件検索等、可変条件検索が必要となる時に利用して下さい */
+    fun <T> findByCriteria(criteria: CriteriaQuery<T>): List<T> = query(criteria).resultList
 
     /**
      * Criteria でページング検索します。
      *
      * Pagination に設定された検索条件は無視されます。 CriteriaQuery 構築時に設定するようにしてください。
      */
-    fun <T> findByCriteria(criteria: CriteriaQuery<T>, criteriaCount: Optional<CriteriaQuery<Long>>, page: Pagination): PagingList<T> {
+    fun <T> findByCriteria(
+            criteria: CriteriaQuery<T>,
+            criteriaCount: Optional<CriteriaQuery<Long>>,
+            page: Pagination
+    ): PagingList<T> {
         Assert.notNull(page, "page is required")
         val total = criteriaCount.map { query(it).resultList.get(0) }.orElse(-1L)
         if (total == 0L) return PagingList(mutableListOf(), Pagination.of(page, 0))
@@ -67,17 +67,21 @@ class OrmTemplate(
         return PagingList<T>(query.resultList, Pagination.of(page, total))
     }
 
-
     /**
      * Criteriaで一件取得します。
      *
      * クロージャ戻り値は引数に取るOrmCriteriaのresult*の実行結果を返すようにしてください。
      */
-    fun <T> getByCriteria(entityClass: Class<T>, func: (OrmCriteria<T>) -> CriteriaQuery<T>): Optional<T> =
-        getByCriteria(func(OrmCriteria.of(em, entityClass)))
+    fun <T> getByCriteria(
+            entityClass: Class<T>,
+            func: (OrmCriteria<T>) -> CriteriaQuery<T>
+    ): Optional<T> = getByCriteria(func(OrmCriteria.of(em, entityClass)))
 
-    fun <T> getByCriteria(entityClass: Class<T>, alias: String, func: (OrmCriteria<T>) -> CriteriaQuery<T>): Optional<T> =
-        getByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
+    fun <T> getByCriteria(
+            entityClass: Class<T>,
+            alias: String,
+            func: (OrmCriteria<T>) -> CriteriaQuery<T>
+    ): Optional<T> = getByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
 
     /**
      * Criteriaで一件取得します。(存在しない時はValidationException)
@@ -85,37 +89,62 @@ class OrmTemplate(
      * クロージャ戻り値は引数に取るOrmCriteriaのresult*の実行結果を返すようにしてください。
      */
     fun <T> loadByCriteria(entityClass: Class<T>, func: (OrmCriteria<T>) -> CriteriaQuery<T>): T =
-        loadByCriteria(func(OrmCriteria.of(em, entityClass)))
+            loadByCriteria(func(OrmCriteria.of(em, entityClass)))
 
-    fun <T> loadByCriteria(entityClass: Class<T>, alias: String, func: (OrmCriteria<T>) -> CriteriaQuery<T>): T =
-        loadByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
+    fun <T> loadByCriteria(
+            entityClass: Class<T>,
+            alias: String,
+            func: (OrmCriteria<T>) -> CriteriaQuery<T>
+    ): T = loadByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
 
     /**
      * Criteriaで検索します。
      *
      * クロージャ戻り値は引数に取るOrmCriteriaのresult*の実行結果を返すようにしてください。
      */
-    fun <T> findByCriteria(entityClass: Class<T>, func: (OrmCriteria<T>) -> CriteriaQuery<T>): List<T> =
-        findByCriteria(func(OrmCriteria.of(em, entityClass)))
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            func: (OrmCriteria<T>) -> CriteriaQuery<T>
+    ): List<T> = findByCriteria(func(OrmCriteria.of(em, entityClass)))
 
-    fun <T> findByCriteria(entityClass: Class<T>, alias: String, func: (OrmCriteria<T>) -> CriteriaQuery<T>): List<T> =
-        findByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            alias: String,
+            func: (OrmCriteria<T>) -> CriteriaQuery<T>
+    ): List<T> = findByCriteria(func(OrmCriteria.of(em, entityClass, alias)))
 
     /**
      * Criteriaでページング検索します。
      *
      * Pagination に設定された検索条件は無視されます。 OrmCriteria 構築時に設定するようにしてください。
      */
-    fun <T> findByCriteria(entityClass: Class<T>, func: (OrmCriteria<T>) -> OrmCriteria<T>, page: Pagination): PagingList<T> {
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            func: (OrmCriteria<T>) -> OrmCriteria<T>,
+            page: Pagination
+    ): PagingList<T> {
         val criteria = OrmCriteria.of(em, entityClass)
         func(criteria)
-        return findByCriteria(criteria.result(), if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount()), page)
+        return findByCriteria(
+                criteria.result(),
+                if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount()),
+                page
+        )
     }
 
-    fun <T> findByCriteria(entityClass: Class<T>, alias: String, func: (OrmCriteria<T>) -> OrmCriteria<T>, page: Pagination): PagingList<T> {
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            alias: String,
+            func: (OrmCriteria<T>) -> OrmCriteria<T>,
+            page: Pagination
+    ): PagingList<T> {
         val criteria = OrmCriteria.of(em, entityClass, alias)
         func(criteria)
-        return findByCriteria(criteria.result(), if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount()), page)
+        return findByCriteria(
+                criteria.result(),
+                if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount()),
+                page
+        )
     }
 
     /**
@@ -125,18 +154,37 @@ class OrmTemplate(
      *
      * Pagination に設定された検索条件は無視されます。 OrmCriteria 構築時に設定するようにしてください。
      */
-    fun <T> findByCriteria(entityClass: Class<T>, func: (OrmCriteria<T>) -> OrmCriteria<T>,
-                           extension: (CriteriaQuery<*>) -> CriteriaQuery<*>, page: Pagination): PagingList<T> {
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            func: (OrmCriteria<T>) -> OrmCriteria<T>,
+            extension: (CriteriaQuery<*>) -> CriteriaQuery<*>,
+            page: Pagination
+    ): PagingList<T> {
         val criteria = OrmCriteria.of(em, entityClass)
         func(criteria)
-        return findByCriteria(criteria.result(extension), if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount(extension)), page)
+        return findByCriteria(
+                criteria.result(extension),
+                if (page.ignoreTotal) Optional.empty()
+                else Optional.of(criteria.resultCount(extension)),
+                page
+        )
     }
 
-    fun <T> findByCriteria(entityClass: Class<T>, alias: String, func: (OrmCriteria<T>) -> OrmCriteria<T>,
-                           extension: (CriteriaQuery<*>) -> CriteriaQuery<*>, page: Pagination): PagingList<T> {
+    fun <T> findByCriteria(
+            entityClass: Class<T>,
+            alias: String,
+            func: (OrmCriteria<T>) -> OrmCriteria<T>,
+            extension: (CriteriaQuery<*>) -> CriteriaQuery<*>,
+            page: Pagination
+    ): PagingList<T> {
         val criteria = OrmCriteria.of(em, entityClass, alias)
         func(criteria)
-        return findByCriteria(criteria.result(extension), if (page.ignoreTotal) Optional.empty() else Optional.of(criteria.resultCount(extension)), page)
+        return findByCriteria(
+                criteria.result(extension),
+                if (page.ignoreTotal) Optional.empty()
+                else Optional.of(criteria.resultCount(extension)),
+                page
+        )
     }
 
     /**
@@ -161,7 +209,7 @@ class OrmTemplate(
 
     /** 対象 Entity を全件取得します。 */
     fun <T> loadAll(entityClass: Class<T>): List<T> =
-        findByCriteria(OrmCriteria.of<T>(em, entityClass).result())
+            findByCriteria(OrmCriteria.of<T>(em, entityClass).result())
 
     /**
      * JPQL で検索します。
@@ -169,20 +217,20 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> find(qlString: String, vararg args: Any): List<T> =
-        bindArgs(em.createQuery(qlString), *args).resultList as List<T>
+            bindArgs(em.createQuery(qlString), *args).resultList as List<T>
 
     /**
      * JPQL でページング検索します。
      *
-     * カウント句がうまく構築されない時はPagination#ignoreTotalをtrueにして、
-     * 別途通常の検索でトータル件数を算出するようにして下さい。
+     * カウント句がうまく構築されない時はPagination#ignoreTotalをtrueにして、 別途通常の検索でトータル件数を算出するようにして下さい。
      *
      * page に設定されたソート条件は無視されるので、 qlString 構築時に明示的な設定をしてください。
      *
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> find(qlString: String, page: Pagination, vararg args: Any): PagingList<T> {
-        val total = if (page.ignoreTotal) -1L else load(OrmUtils.createCountQueryFor(qlString), args)
+        val total =
+                if (page.ignoreTotal) -1L else load(OrmUtils.createCountQueryFor(qlString), args)
         val list = bindArgsWithPage(em.createQuery(qlString), page, *args).resultList as List<T>
         return PagingList(list, Pagination.of(page, total))
     }
@@ -219,7 +267,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> findNamed(name: String, vararg args: Any): List<T> =
-        bindArgs(em.createNamedQuery(name), *args).resultList as List<T>
+            bindArgs(em.createNamedQuery(name), *args).resultList as List<T>
 
     /**
      * 定義済み JPQL でページング検索します。
@@ -230,7 +278,12 @@ class OrmTemplate(
      *
      * page に設定されたソート条件は無視されます。
      */
-    fun <T> findNamed(name: String, nameCount: String, page: Pagination, args: Map<String, Any>): PagingList<T> {
+    fun <T> findNamed(
+            name: String,
+            nameCount: String,
+            page: Pagination,
+            args: Map<String, Any>
+    ): PagingList<T> {
         val total = if (page.ignoreTotal) -1L else loadNamed(nameCount, args)
         val list = bindArgsWithPage(em.createNamedQuery(name), page, args).resultList as List<T>
         return PagingList(list, Pagination.of(page, total))
@@ -244,7 +297,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> findBySql(sql: String, vararg args: Any): List<T> =
-        bindArgs(em.createNativeQuery(sql), *args).resultList as List<T>
+            bindArgs(em.createNativeQuery(sql), *args).resultList as List<T>
 
     /**
      * SQL で検索します。
@@ -252,7 +305,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun <T> findBySql(sql: String, clazz: Class<T>, vararg args: Any): List<T> =
-        bindArgs(em.createNativeQuery(sql, clazz), *args).resultList as List<T>
+            bindArgs(em.createNativeQuery(sql, clazz), *args).resultList as List<T>
 
     /**
      * SQL でページング検索します。
@@ -261,8 +314,20 @@ class OrmTemplate(
      *
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
-    fun <T> findBySql(sql: String, sqlCount: String, page: Pagination, vararg args: Any): PagingList<T> {
-        val total = if (page.ignoreTotal) -1L else findBySql<Any>(sqlCount, *args).stream().findFirst().map { v -> java.lang.Long.parseLong(v.toString()) }.orElse(0L)
+    fun <T> findBySql(
+            sql: String,
+            sqlCount: String,
+            page: Pagination,
+            vararg args: Any
+    ): PagingList<T> {
+        val total =
+                if (page.ignoreTotal) -1L
+                else
+                        findBySql<Any>(sqlCount, *args)
+                                .stream()
+                                .findFirst()
+                                .map { v -> java.lang.Long.parseLong(v.toString()) }
+                                .orElse(0L)
         val list = bindArgsWithPage(em.createNativeQuery(sql), page, *args).resultList as List<T>
         return PagingList<T>(list, Pagination.of(page, total))
     }
@@ -274,9 +339,24 @@ class OrmTemplate(
      *
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
-    fun <T> findBySql(sql: String, sqlCount: String, clazz: Class<T>, page: Pagination, vararg args: Any): PagingList<T> {
-        val total = if (page.ignoreTotal) -1L else findBySql<Any>(sqlCount, *args).stream().findFirst().map { v -> java.lang.Long.parseLong(v.toString()) }.orElse(0L)
-        val list = bindArgsWithPage(em.createNativeQuery(sql, clazz), page, *args).resultList as List<T>
+    fun <T> findBySql(
+            sql: String,
+            sqlCount: String,
+            clazz: Class<T>,
+            page: Pagination,
+            vararg args: Any
+    ): PagingList<T> {
+        val total =
+                if (page.ignoreTotal) -1L
+                else
+                        findBySql<Any>(sqlCount, *args)
+                                .stream()
+                                .findFirst()
+                                .map { v -> java.lang.Long.parseLong(v.toString()) }
+                                .orElse(0L)
+        val list =
+                bindArgsWithPage(em.createNativeQuery(sql, clazz), page, *args).resultList as
+                        List<T>
         return PagingList<T>(list, Pagination.of(page, total))
     }
 
@@ -286,7 +366,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun execute(qlString: String, vararg args: Any): Int =
-        bindArgs(em.createQuery(qlString), *args).executeUpdate()
+            bindArgs(em.createQuery(qlString), *args).executeUpdate()
 
     /**
      * 定義済み JPQL を実行します。
@@ -296,7 +376,7 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun executeNamed(name: String, vararg args: Any): Int =
-        bindArgs(em.createNamedQuery(name), *args).executeUpdate()
+            bindArgs(em.createNamedQuery(name), *args).executeUpdate()
 
     /**
      * SQL を実行をします。
@@ -304,11 +384,11 @@ class OrmTemplate(
      * args に Map を指定した時は名前付き引数として取り扱います。 ( Map のキーには文字列を指定してください )
      */
     fun executeSql(sql: String, vararg args: Any): Int =
-        bindArgs(em.createNativeQuery(sql), *args).executeUpdate()
+            bindArgs(em.createNativeQuery(sql), *args).executeUpdate()
 
     /** ストアド を処理をします。 */
     fun callStoredProcedure(procedureName: String, proc: (StoredProcedureQuery) -> Unit) =
-        proc(bindArgs(em.createStoredProcedureQuery(procedureName)) as StoredProcedureQuery)
+            proc(bindArgs(em.createStoredProcedureQuery(procedureName)) as StoredProcedureQuery)
 
     /**
      * クエリに値を紐付けします。
@@ -316,14 +396,12 @@ class OrmTemplate(
      * Map 指定時はキーに文字を指定します。それ以外は自動的に 1 開始のポジション指定をおこないます。
      */
     fun bindArgs(query: Query, vararg args: Any): Query =
-        bindArgsWithPage(query = query, page =null, args = *args)
+            bindArgsWithPage(query = query, page = null, args = *args)
 
     fun bindArgsWithPage(query: Query, page: Pagination?, vararg args: Any): Query {
         if (page != null) {
-            if (page.page > 0)
-                query.firstResult = page.firstResult
-            if (page.size > 0)
-                query.maxResults = page.size
+            if (page.page > 0) query.firstResult = page.firstResult
+            if (page.size > 0) query.maxResults = page.size
         }
         for (i in args.indices) {
             val arg = args[i]
@@ -336,5 +414,4 @@ class OrmTemplate(
         }
         return query
     }
-
 }

@@ -50,7 +50,9 @@ extension:
 
 ---
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
 
 extension:
   datasource:
@@ -75,9 +77,11 @@ extension:
 
 ---
 spring:
-  profiles: admin
+  config:
+    activate:
+      on-profile: admin
 
 server.port: 8081
 
-extension: 
+extension:
   security.auth.admin: true

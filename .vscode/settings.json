@@ -1,0 +1,23 @@
+{
+    "kotlin.codeStyle": "official",
+    "kotlin.useOldBackend": false,
+    "kotlin.languageServer.enabled": true,
+    "kotlin.languageServer.debugAttach.enabled": true,
+    "kotlin.languageServer.transport": "stdio",
+    "kotlin.compiler.jvm.target": "21",
+    "gradle.nestedProjects": true,
+    "gradle.javaDebug": true,
+    "files.associations": {
+        "*.kt": "kotlin",
+        "*.kts": "kotlin"
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "spring-boot.ls.checkJVM": false
+} 

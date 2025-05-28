@@ -11,7 +11,7 @@ import sample.context.security.SecurityActorFinder
 import sample.context.security.SecurityProperties
 import sample.model.master.RegHoliday
 import sample.usecase.admin.MasterAdminService
-import javax.validation.Valid
+import jakarta.validation.Valid
 
 /**
  * マスタに関わる社内のUI要求を処理します。

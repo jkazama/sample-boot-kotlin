@@ -1,18 +1,13 @@
 package sample.context.orm
 
-import org.apache.commons.lang3.StringUtils
-import org.hibernate.criterion.MatchMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import org.apache.commons.lang3.StringUtils
 
-
-/**
- * 簡易にJPQLを生成するためのビルダー。
- * <p>条件句の動的条件生成に特化させています。
- */
+/** 簡易にJPQLを生成するためのビルダー。 <p>条件句の動的条件生成に特化させています。 */
 class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
     private val conditions: MutableList<String> = mutableListOf()
     private val reservedArgs: MutableList<Any> = mutableListOf()
@@ -33,7 +28,7 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return this
     }
 
-    /** 一致条件を付与します。(値がnullの時は無視されます)  */
+    /** 一致条件を付与します。(値がnullの時は無視されます) */
     fun equal(field: String, value: Any?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s = ?%d", field, index.getAndIncrement()))
@@ -60,21 +55,21 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
                 value != null
             }
 
-    /** 不一致条件を付与します。(値がnullの時は無視されます)  */
+    /** 不一致条件を付与します。(値がnullの時は無視されます) */
     fun equalNot(field: String, value: Any?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s != ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
             }
 
-    /** like条件を付与します。(値がnullの時は無視されます)  */
+    /** like条件を付与します。(値がnullの時は無視されます) */
     fun like(field: String, value: String?, mode: MatchMode): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s like ?%d", field, index.getAndIncrement()))
-                args.add(mode.toMatchString(value))
+                args.add(mode.toMatchString(value!!))
             }
 
-    /** like条件を付与します。[複数フィールドに対するOR結合](値がnullの時は無視されます)  */
+    /** like条件を付与します。[複数フィールドに対するOR結合](値がnullの時は無視されます) */
     fun like(fields: List<String>, value: String?, mode: MatchMode): JpqlBuilder =
             ifValid(value) {
                 val condition = StringBuilder("(")
@@ -83,24 +78,30 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
                         condition.append(" or ")
                     }
                     condition.append(String.format("(%s like ?%d)", field, index.getAndIncrement()))
-                    args.add(mode.toMatchString(value))
+                    args.add(mode.toMatchString(value!!))
                 }
                 condition.append(")")
                 conditions.add(condition.toString())
             }
 
-    /** in条件を付与します。  */
+    /** in条件を付与します。 */
     fun `in`(field: String, values: List<Any>): JpqlBuilder =
             ifValid(values) {
                 conditions.add(String.format("%s in ?%d", field, index.getAndIncrement()))
                 args.add(values)
             }
 
-    /** between条件を付与します。  */
+    /** between条件を付与します。 */
     fun between(field: String, from: Date?, to: Date?): JpqlBuilder {
         if (from != null && to != null) {
-            conditions.add(String.format(
-                    "%s between ?%d and ?%d", field, index.getAndIncrement(), index.getAndIncrement()))
+            conditions.add(
+                    String.format(
+                            "%s between ?%d and ?%d",
+                            field,
+                            index.getAndIncrement(),
+                            index.getAndIncrement()
+                    )
+            )
             args.add(from)
             args.add(to)
         } else if (from != null) {
@@ -111,11 +112,17 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return this
     }
 
-    /** between条件を付与します。  */
+    /** between条件を付与します。 */
     fun between(field: String, from: LocalDate?, to: LocalDate?): JpqlBuilder {
         if (from != null && to != null) {
-            conditions.add(String.format(
-                    "%s between ?%d and ?%d", field, index.getAndIncrement(), index.getAndIncrement()))
+            conditions.add(
+                    String.format(
+                            "%s between ?%d and ?%d",
+                            field,
+                            index.getAndIncrement(),
+                            index.getAndIncrement()
+                    )
+            )
             args.add(from)
             args.add(to)
         } else if (from != null) {
@@ -126,11 +133,17 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return this
     }
 
-    /** between条件を付与します。  */
+    /** between条件を付与します。 */
     fun between(field: String, from: LocalDateTime?, to: LocalDateTime?): JpqlBuilder {
         if (from != null && to != null) {
-            conditions.add(String.format(
-                    "%s between ?%d and ?%d", field, index.getAndIncrement(), index.getAndIncrement()))
+            conditions.add(
+                    String.format(
+                            "%s between ?%d and ?%d",
+                            field,
+                            index.getAndIncrement(),
+                            index.getAndIncrement()
+                    )
+            )
             args.add(from)
             args.add(to)
         } else if (from != null) {
@@ -141,11 +154,17 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return this
     }
 
-    /** between条件を付与します。  */
+    /** between条件を付与します。 */
     fun between(field: String, from: String?, to: String?): JpqlBuilder {
         if (isValid(from) && isValid(to)) {
-            conditions.add(String.format(
-                    "%s between ?%d and ?%d", field, index.getAndIncrement(), index.getAndIncrement()))
+            conditions.add(
+                    String.format(
+                            "%s between ?%d and ?%d",
+                            field,
+                            index.getAndIncrement(),
+                            index.getAndIncrement()
+                    )
+            )
             args.add(from!!)
             args.add(to!!)
         } else if (isValid(from)) {
@@ -156,41 +175,41 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return this
     }
 
-    /** [フィールド]&gt;=[値] 条件を付与します。(値がnullの時は無視されます)  */
+    /** [フィールド]&gt;=[値] 条件を付与します。(値がnullの時は無視されます) */
     fun <Y : Comparable<Y>> gte(field: String, value: Y?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s >= ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
             }
 
-    /** [フィールド]&gt;[値] 条件を付与します。(値がnullの時は無視されます)  */
+    /** [フィールド]&gt;[値] 条件を付与します。(値がnullの時は無視されます) */
     fun <Y : Comparable<Y>> gt(field: String, value: Y?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s > ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
             }
 
-    /** [フィールド]&lt;=[値] 条件を付与します。  */
+    /** [フィールド]&lt;=[値] 条件を付与します。 */
     fun <Y : Comparable<Y>> lte(field: String, value: Y?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s <= ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
             }
 
-    /** [フィールド]&lt;[値] 条件を付与します。  */
+    /** [フィールド]&lt;[値] 条件を付与します。 */
     fun <Y : Comparable<Y>> lt(field: String, value: Y?): JpqlBuilder =
             ifValid(value) {
                 conditions.add(String.format("%s < ?%d", field, index.getAndIncrement()))
                 args.add(value!!)
             }
 
-    /** order by 条件句を付与します。  */
+    /** order by 条件句を付与します。 */
     fun orderBy(orderBy: String): JpqlBuilder {
         this.orderBy = Optional.ofNullable(orderBy)
         return this
     }
 
-    /** JPQLを生成します。  */
+    /** JPQLを生成します。 */
     fun build(): String {
         val jpql = StringBuilder(this.jpql.toString())
         if (!conditions.isEmpty()) {
@@ -207,9 +226,8 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
         return jpql.toString()
     }
 
-    /** JPQLに紐付く実行引数を返します。  */
-    fun args(): Array<Any> =
-        (reservedArgs + args).toTypedArray()
+    /** JPQLに紐付く実行引数を返します。 */
+    fun args(): Array<Any> = (reservedArgs + args).toTypedArray()
 
     companion object {
         /**
@@ -217,14 +235,12 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
          * @param baseJpql 基点となるJPQL (where / order by は含めない)
          * @return ビルダー情報
          */
-        fun of(baseJpql: String): JpqlBuilder =
-                of(baseJpql, 1)
+        fun of(baseJpql: String): JpqlBuilder = of(baseJpql, 1)
 
         /**
          * ビルダーを生成します。
          * @param baseJpql 基点となるJPQL (where / order by は含めない)
-         * @param fromIndex 動的に付与する条件句の開始インデックス(1開始)。
-         * 既に「field=?1」等で置換連番を付与しているときはその次番号。
+         * @param fromIndex 動的に付与する条件句の開始インデックス(1開始)。 既に「field=?1」等で置換連番を付与しているときはその次番号。
          * @param args 既に付与済みの置換連番に紐づく引数
          * @return ビルダー情報
          */
@@ -244,15 +260,18 @@ class JpqlBuilder(val jpql: StringBuilder, val index: AtomicInteger) {
          * ビルダーを生成します。
          * @param baseJpql 基点となるJPQL (where / order by は含めない)
          * @param staticCondition 条件指定無しに確定する where 条件句 (field is null 等)
-         * @param fromIndex 動的に付与する条件句の開始インデックス(1開始)。
-         * 既に「field=?1」等で置換連番を付与しているときはその次番号。
+         * @param fromIndex 動的に付与する条件句の開始インデックス(1開始)。 既に「field=?1」等で置換連番を付与しているときはその次番号。
          * @param args 既に付与済みの置換連番に紐づく引数
          * @return ビルダー情報
          */
-        fun of(baseJpql: String, staticCondition: String, fromIndex: Int, vararg args: Any): JpqlBuilder =
+        fun of(
+                baseJpql: String,
+                staticCondition: String,
+                fromIndex: Int,
+                vararg args: Any
+        ): JpqlBuilder =
                 JpqlBuilder(StringBuilder(baseJpql), AtomicInteger(fromIndex))
                         .add(staticCondition)
                         .reservedArgs(args)
     }
-
 }

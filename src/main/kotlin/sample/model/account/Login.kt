@@ -8,8 +8,8 @@ import sample.context.orm.OrmRepository
 import sample.model.constraints.IdStr
 import sample.model.constraints.Password
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.Id
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
 
 /**
  * 口座ログインを表現します。

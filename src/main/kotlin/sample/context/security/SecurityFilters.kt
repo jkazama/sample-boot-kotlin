@@ -1,6 +1,6 @@
 package sample.context.security
 
-import javax.servlet.Filter
+import jakarta.servlet.Filter
 
 /**
  * Spring Securityに対するFilter拡張設定。

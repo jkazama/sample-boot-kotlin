@@ -1,18 +1,16 @@
 package sample
 
-/**
- * 何らかの行為に関わる処理ステータス概念。
- */
+/** Processing status concept related to some action. */
 enum class ActionStatusType {
-    /** 未処理 */
+    /** Unprocessed */
     Unprocessed,
-    /** 処理中 */
+    /** Processing */
     Processing,
-    /** 処理済 */
+    /** Processed */
     Processed,
-    /** 取消 */
+    /** Cancelled */
     Cancelled,
-    /** エラー */
+    /** Error */
     Error;
 
     val isFinish: Boolean
@@ -23,11 +21,11 @@ enum class ActionStatusType {
         get() = unprocessedTypes.contains(this)
 
     companion object {
-        /** 完了済みのステータス一覧 */
+        /** List of completed statuses */
         val finishTypes: List<ActionStatusType> = listOf(Processed, Cancelled)
-        /** 未完了のステータス一覧(処理中は含めない) */
+        /** List of incomplete statuses (excluding processing) */
         val unprocessingTypes: List<ActionStatusType> = listOf(Unprocessed, Error)
-        /** 未完了のステータス一覧(処理中も含める) */
+        /** List of incomplete statuses (including processing) */
         val unprocessedTypes: List<ActionStatusType> = listOf(Unprocessed, Processing, Error)
     }
 }

@@ -1,19 +1,21 @@
 plugins {
     id "java"
-    id "org.jetbrains.kotlin.jvm"
-    id "org.jetbrains.kotlin.plugin.spring"
-    id "org.jetbrains.kotlin.plugin.jpa"
-    id "org.springframework.boot"
-    id "io.spring.dependency-management" version "1.0.9.RELEASE"
+    id "org.jetbrains.kotlin.jvm" version "2.0.21"
+    id "org.jetbrains.kotlin.plugin.spring" version "2.0.21"
+    id "org.jetbrains.kotlin.plugin.jpa" version "2.0.21"
+    id "org.springframework.boot" version "3.5.0"
+    id "io.spring.dependency-management" version "1.1.6"
 }
 
 version = "2.3.0"
 
 def defaultEncoding = 'UTF-8'
-def jvmVersion = '1.8'
+def jvmVersion = '21'
 
-sourceCompatibility = jvmVersion
-targetCompatibility = jvmVersion
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
 
 javadoc {
     options.encoding = defaultEncoding
@@ -25,12 +27,14 @@ compileKotlin.dependsOn(processResources)
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
     kotlinOptions {
         suppressWarnings = true
-        jvmTarget = "1.8"
+        jvmTarget = "21"
+        freeCompilerArgs += ["-Xjsr305=strict"]
     }
 }
 
 test {
     include "**/model/**", "**/controller/**", "**/usecase/**", "**/util/**", "**/context/**", "**/client/**"
+    useJUnitPlatform()
 }
 
 springBoot {
@@ -44,7 +48,7 @@ repositories {
 dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "org.jetbrains.kotlin:kotlin-reflect"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-security"
@@ -53,20 +57,20 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation "org.ehcache:ehcache"
+    implementation "org.ehcache:ehcache::jakarta"
     implementation "javax.cache:cache-api"
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5"
-    implementation "commons-io:commons-io:2.6"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate6"
+    implementation "commons-io:commons-io:2.16.0"
     implementation "org.apache.commons:commons-lang3"
-    implementation "com.ibm.icu:icu4j:65.1"
-    implementation fileTree(dir: 'libs', includes: ['*.jar'])
+    implementation "com.ibm.icu:icu4j:75.1"
     runtimeOnly "com.h2database:h2"
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation "org.jetbrains.kotlin:kotlin-test"
-    testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit5"
+    testImplementation "io.mockk:mockk:1.13.12"
 }
 
 wrapper {
-    gradleVersion = "6.4.1"
+    gradleVersion = "8.14.1"
 }

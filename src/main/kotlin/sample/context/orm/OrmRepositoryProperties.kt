@@ -1,5 +1,7 @@
 package sample.context.orm
 
+import jakarta.persistence.EntityManagerFactory
+import javax.sql.DataSource
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateProperties
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateSettings
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
@@ -8,9 +10,6 @@ import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.JpaVendorAdapter
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
-import javax.persistence.EntityManagerFactory
-import javax.sql.DataSource
-
 
 /** JPA コンポーネントを生成するための設定情報を表現します。 */
 data class OrmRepositoryProperties(
@@ -21,14 +20,22 @@ data class OrmRepositoryProperties(
         var hibernate: HibernateProperties = HibernateProperties()
 ) : JpaProperties() {
 
-    fun entityManagerFactoryBean(name: String, dataSource: DataSource): LocalContainerEntityManagerFactoryBean {
-        val emfBuilder = EntityManagerFactoryBuilder(
-                vendorAdapter(), properties, null)
-        val builder = emfBuilder
-                .dataSource(dataSource)
-                .persistenceUnit(name)
-                .properties(hibernate.determineHibernateProperties(getProperties(), HibernateSettings()))
-                .jta(false)
+    fun entityManagerFactoryBean(
+            name: String,
+            dataSource: DataSource
+    ): LocalContainerEntityManagerFactoryBean {
+        val emfBuilder = EntityManagerFactoryBuilder(vendorAdapter(), properties, null)
+        val builder =
+                emfBuilder
+                        .dataSource(dataSource)
+                        .persistenceUnit(name)
+                        .properties(
+                                hibernate.determineHibernateProperties(
+                                        getProperties(),
+                                        HibernateSettings()
+                                )
+                        )
+                        .jta(false)
         if (annotatedClasses.isNotEmpty()) {
             builder.packages(*annotatedClasses.toTypedArray())
         } else {
@@ -50,5 +57,4 @@ data class OrmRepositoryProperties(
 
     fun transactionManager(emf: EntityManagerFactory): JpaTransactionManager =
             JpaTransactionManager(emf)
-
 }

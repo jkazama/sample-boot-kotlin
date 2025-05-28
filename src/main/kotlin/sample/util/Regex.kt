@@ -1,45 +1,42 @@
 package sample.util
 
-/**
- * 正規表現定数インターフェース。
- * <p>Checker.matchと組み合わせて利用してください。
- */
+/** Regular expression constants interface. <p>Please use in combination with Checker.match. */
 object Regex {
-    /** Ascii  */
+    /** ASCII */
     const val rAscii = "^\\p{ASCII}*$"
-    /** 英字  */
+    /** Alphabetic */
     const val rAlpha = "^[a-zA-Z]*$"
-    /** 英字大文字  */
+    /** Uppercase alphabetic */
     const val rAlphaUpper = "^[A-Z]*$"
-    /** 英字小文字  */
+    /** Lowercase alphabetic */
     const val rAlphaLower = "^[a-z]*$"
-    /** 英数  */
+    /** Alphanumeric */
     const val rAlnum = "^[0-9a-zA-Z]*$"
-    /** シンボル  */
+    /** Symbol */
     const val rSymbol = "^\\p{Punct}*$"
-    /** 英数記号  */
+    /** Alphanumeric symbol */
     const val rAlnumSymbol = "^[0-9a-zA-Z\\p{Punct}]*$"
-    /** 数字  */
+    /** Number */
     const val rNumber = "^[-]?[0-9]*$"
-    /** 整数  */
+    /** Natural number */
     const val rNumberNatural = "^[0-9]*$"
-    /** 倍精度浮動小数点  */
+    /** Double precision floating point */
     const val rDecimal = "^[-]?(\\d+)(\\.\\d+)?$"
     // see UnicodeBlock
-    /** ひらがな  */
+    /** Hiragana */
     const val rHiragana = "^\\p{InHiragana}*$"
-    /** カタカナ  */
+    /** Katakana */
     const val rKatakana = "^\\p{InKatakana}*$"
-    /** 半角カタカナ  */
+    /** Half-width Katakana */
     const val rHankata = "^[｡-ﾟ]*$"
-    /** 半角文字列  */
-    const val rHankaku = "^[\\p{InBasicLatin}｡-ﾟ]*$" // ラテン文字 + 半角カタカナ
-    /** 全角文字列  */
-    const val rZenkaku = "^[^\\p{InBasicLatin}｡-ﾟ]*$" // 全角の定義を半角以外で割り切り
-    /** 漢字  */
+    /** Half-width string */
+    const val rHankaku = "^[\\p{InBasicLatin}｡-ﾟ]*$" // Latin characters + half-width Katakana
+    /** Full-width string */
+    const val rZenkaku = "^[^\\p{InBasicLatin}｡-ﾟ]*$" // Full-width definition as non-half-width
+    /** Kanji */
     const val rKanji = "^[\\p{InCJKUnifiedIdeographs}々\\p{InCJKCompatibilityIdeographs}]*$"
-    /** 文字  */
+    /** Character */
     const val rWord = "^(?s).*$"
-    /** コード  */
-    const val rCode = "^[0-9a-zA-Z_-]*$" // 英数 + アンダーバー + ハイフン
+    /** Code */
+    const val rCode = "^[0-9a-zA-Z_-]*$" // Alphanumeric + underscore + hyphen
 }

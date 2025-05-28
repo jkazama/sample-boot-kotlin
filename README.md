@@ -1,214 +1,213 @@
 sample-boot-kotlin
 ---
 
-### はじめに
+### Introduction
 
-[Spring Boot](http://projects.spring.io/spring-boot/) / [Spring Security](http://projects.spring.io/spring-security/) / [Kotlin](https://kotlinlang.org/) を元にした DDD サンプル実装です。  
-ベーシックな基盤は Java 版である [sample-boot-hibernate](https://github.com/jkazama/sample-boot-hibernate) から流用しています。  
-フレームワークではないので、 Spring Boot を利用するプロジェクトを立ち上げる際に元テンプレートとして利用して下さい。
+This is a DDD sample implementation based on [Spring Boot](http://projects.spring.io/spring-boot/) / [Spring Security](http://projects.spring.io/spring-security/) / [Kotlin](https://kotlinlang.org/).
+The basic foundation is borrowed from the Java version [sample-boot-hibernate](https://github.com/jkazama/sample-boot-hibernate).
+This is not a framework, so please use it as a base template when starting up a project that uses Spring Boot.
 
-考え方の骨子については以前発表した資料 ( [Spring Bootを用いたドメイン駆動設計](http://www.slideshare.net/jkazama/jsug-20141127) ) を参照してください。
+For the core concepts, please refer to the materials presented previously ([Domain-Driven Design using Spring Boot](http://www.slideshare.net/jkazama/jsug-20141127)).
 
-UI 側の実装サンプルについては [sample-ui-vue](https://github.com/jkazama/sample-ui-vue) / [sample-ui-react](https://github.com/jkazama/sample-ui-react) を参照してください。
+For UI implementation samples, please refer to [sample-ui-vue](https://github.com/jkazama/sample-ui-vue) / [sample-ui-react](https://github.com/jkazama/sample-ui-react).
 
 ---
 
-本サンプルは Spring Boot を用いたドメインモデリングの実装例としても利用できます。実際にそれなりの規模の案件で運用されていた実装アプローチなので、モデリングする際の参考事例としてみてもらえればと思います。  
+This sample can also be used as an implementation example of domain modeling using Spring Boot. Since this is an implementation approach that has actually been used in projects of considerable scale, I hope you can use it as a reference case when modeling.
 
-*※ JavaDoc に記載をしていますが参考実装レベルです。製品水準のコードが含まれているわけではありません。*
+*※ As noted in the JavaDoc, this is a reference implementation level. It does not contain production-level code.*
 
-#### レイヤリングの考え方
+#### Layering Concept
 
-オーソドックスな三層モデルですが、横断的な解釈としてインフラ層を考えています。
+This is an orthodox three-layer model, but the infrastructure layer is considered as a cross-cutting interpretation.
 
-| レイヤ          | 特徴                                                        |
-| -------------- | ----------------------------------------------------------- |
-| UI             | ユースケース処理を公開 ( 必要に応じてリモーティングや外部サイトを連携 ) |
-| アプリケーション | ユースケース処理を集約 ( 外部リソースアクセスも含む )                 |
-| ドメイン        | 純粋なドメイン処理 ( 外部リソースに依存しない )                      |
-| インフラ        | DI コンテナや ORM 、各種ライブラリ、メッセージリソースの提供          |
+| Layer          | Characteristics                                                        |
+| -------------- | ---------------------------------------------------------------------- |
+| UI             | Exposes use case processing (integrates remoting and external sites as needed) |
+| Application    | Aggregates use case processing (including external resource access)    |
+| Domain         | Pure domain processing (does not depend on external resources)         |
+| Infrastructure | Provides DI containers, ORM, various libraries, and message resources  |
 
-UI 層の公開処理は通常 JSP や Thymeleaf を用いて行いますが、本サンプルでは異なる種類のクライアント利用を想定して RESTfulAPI での API 提供のみをおこないます。 ( 利用クライアントは別途用意する必要があります )
+The UI layer's exposed processing is usually done using JSP or Thymeleaf, but in this sample, we assume the use of different types of clients and only provide API through RESTful API. (Client applications need to be prepared separately)
 
-#### Spring Boot の利用方針
+#### Spring Boot Usage Policy
 
-Spring Boot は様々な利用方法が可能ですが、本サンプルでは以下のポリシーで利用します。
+Spring Boot can be used in various ways, but in this sample we use it with the following policies:
 
-- 設定ファイルは yml を用いる。 Bean 定義に xml 等の拡張ファイルは用いない。
-- 登録するBeanは起動速度/保守性の両面からコンポーネントスキャンは限定し、他は定義クラスで補完
+- Use yml for configuration files. Do not use extended files like xml for Bean definitions.
+- For registered Beans, limit component scanning for both startup speed and maintainability, and supplement with definition classes
     - `ApplicationConfig` / `ApplicationDbConfig` / `ApplicationSecurityConfig`
-    - `controller` / `usecase` 配下のみ自動スキャンを有効に
-- 例外処理は終端 ( RestErrorAdvice / RestErrorCotroller ) で定義。 whitelabel 機能は無効化。
-- JPA 実装として Hibernate に特化。
-- Spring Security の認証方式はベーシック認証でなく、昔からよくある HttpSession で。
-- 基礎的なユーティリティで Spring がサポートしていないのは簡易な実装を用意。
+    - Enable automatic scanning only under `controller` / `usecase`
+- Exception handling is defined at the endpoint (RestErrorAdvice / RestErrorController). Disable whitelabel functionality.
+- Specialize in Hibernate as the JPA implementation.
+- Spring Security authentication method uses HttpSession, which has been common for a long time, instead of basic authentication.
+- Provide simple implementations for basic utilities that Spring does not support.
 
-#### Kotlin コーディング方針
+#### Kotlin Coding Policy
 
-- GradleのKotlinプラグインを積極的に利用
+- Actively use Gradle's Kotlin plugins
     - `kotlin-spring` / `kotlin-jpa`
-- DIコンテナへ配置するシングルトンな Bean は通常 class で定義し @Component を付与
-    - `kotlin-spring` の恩恵で open が自動的に適用される
-- 要求引数や戻り値、エンティティ等のデータ転送オブジェクト(DTO)は data class で定義
-- DI はコンストラクタインジェクションを中心におこなう
-- Bean Validation アノテーションがそのままだとうまく適用されないので @field を付与
-    - 拡張Bean Validation アノテーションは作り方が良く分からなかったためjavaの方で作成
-- Bean Validation を利用するDTOクラスのフィールドは全て null を許容
-    - 評価する際に null 状態を一次的に受け入れる必要があるため
-- Entityにおいては副作用ある処理を許容し、業務要求となるDTO引数などでは許容しない
-    - Entityへ副作用を与える要求は全て業務メソッド経由に集約する
+- Singleton Beans placed in the DI container are usually defined as normal classes with @Component annotation
+    - The `kotlin-spring` benefit automatically applies `open`
+- Data transfer objects (DTOs) such as request parameters, return values, and entities are defined as data classes
+- DI is mainly performed through constructor injection
+- Bean Validation annotations need @field annotation to be applied properly
+    - Extended Bean Validation annotations were created in Java since the creation method in Kotlin was unclear
+- All fields in DTO classes using Bean Validation allow null
+    - It is necessary to temporarily accept null state when evaluating
+- Entities allow side-effect processing, while business requirement DTOs do not
+    - All requests that cause side effects to Entities are aggregated through business methods
 
+#### Package Structure
 
-#### パッケージ構成
-
-パッケージ/リソース構成については以下を参照してください。
+Please refer to the following for package/resource structure:
 
 ```
 main
   kotlin
     sample
-      context                         … インフラ層
-      controller                      … UI 層
-      model                           … ドメイン層
-      usecase                         … アプリケーション層
-      util                            … 汎用ユーティリティ
-      - Application.kt                … 実行可能な起動クラス
+      context                         … Infrastructure layer
+      controller                      … UI layer
+      model                           … Domain layer
+      usecase                         … Application layer
+      util                            … General utilities
+      - Application.kt                … Executable startup class
   resources
-    - application.yml                 … 設定ファイル
-    - ehcache.xml                     … Spring Cache 設定ファイル
-    - logback-spring.xml              … ロギング設定ファイル
-    - messages-validation.properties  … 例外メッセージリソース
-    - messages.properties             … メッセージリソース
+    - application.yml                 … Configuration file
+    - ehcache.xml                     … Spring Cache configuration file
+    - logback-spring.xml              … Logging configuration file
+    - messages-validation.properties  … Exception message resources
+    - messages.properties             … Message resources
 ```
 
-### サンプルユースケース
+### Sample Use Case
 
-サンプルユースケースとしては以下のようなシンプルな流れを想定します。
+The sample use case assumes a simple flow as follows:
 
-- **口座残高 100 万円を持つ顧客**が出金依頼 ( 発生 T, 受渡 T + 3 ) をする。
-- **システム**が営業日を進める。
-- **システム**が出金依頼を確定する。(確定させるまでは依頼取消行為を許容)
-- **システム**が受渡日を迎えた入出金キャッシュフローを口座残高へ反映する。
+- **A customer with an account balance of 1 million yen** makes a withdrawal request (occurrence T, settlement T + 3).
+- **The system** advances the business day.
+- **The system** confirms the withdrawal request. (Allows withdrawal cancellation until confirmation)
+- **The system** reflects the deposit/withdrawal cash flow that reached the settlement date to the account balance.
 
-### 動作確認
+### Operation Verification
 
-本サンプルは [Gradle](https://gradle.org/) を利用しているので、 IDE やコンソールで手間なく動作確認を行うことができます。
+This sample uses [Gradle](https://gradle.org/), so you can easily verify operation in an IDE or console.
 
-*※ライブラリダウンロードなどが自動で行われるため、インターネット接続が可能な端末で実行してください。*
+*※Please run on a terminal with internet connection as library downloads are performed automatically.*
 
-#### サーバ起動 （ IntelliJ IDEA ）
+#### Server Startup (IntelliJ IDEA)
 
-[IntelliJ IDEA](https://www.jetbrains.com/idea/)を利用して起動するには、次の手順で本サンプルをプロジェクト化してください。  
+To start using [IntelliJ IDEA](https://www.jetbrains.com/idea/), please make this sample into a project with the following steps:
 
-1. 「 File -> New -> Project From Existing Sources... 」 で本サンプルの build.gradle を選択して *OK* を押下
+1. Select "File -> New -> Project From Existing Sources..." and select build.gradle of this sample, then press *OK*
 
-次の手順で本サンプルを実行してください。
+Execute this sample with the following steps:
 
-1. *Application.kt* に対し 「 右クリック -> Run `sample.Application.kt...` 」
-1. *Console* タブに 「 Started Application 」 という文字列が出力されればポート 8080 で起動が完了
-1. ブラウザを立ち上げて 「 http://localhost:8080/management/health 」 で状態を確認
+1. Right-click on *Application.kt* and select "Run `sample.Application.kt...`"
+1. When "Started Application" is output to the *Console* tab, startup is complete on port 8080
+1. Launch a browser and check the status at "http://localhost:8080/management/health"
 
-#### サーバ起動 （ コンソール ）
+#### Server Startup (Console)
 
-Windows / Mac のコンソールから実行するには Gradle のコンソールコマンドで行います。  
+To run from Windows/Mac console, use Gradle console commands.
 
-*※事前に JDK8 以上のインストールが必要です。*
+*※JDK8 or higher installation is required in advance.*
 
-1. ダウンロードした *sample-boot-kotlin* ディレクトリ直下へコンソールで移動
-1. 「 gradlew bootRun 」 を実行
-1. コンソールに 「 Started Application 」 という文字列が出力されればポート 8080 で起動が完了
-1. ブラウザを立ち上げて 「 http://localhost:8080/management/health 」 で状態を確認
+1. Move to the console directly under the downloaded *sample-boot-kotlin* directory
+1. Execute "gradlew bootRun"
+1. When "Started Application" is output to the console, startup is complete on port 8080
+1. Launch a browser and check the status at "http://localhost:8080/management/health"
 
-#### クライアント検証
+#### Client Verification
 
-Eclipse またはコンソールでサーバを立ち上げた後、 test パッケージ配下にある `SampleClient` の各検証メソッドをユニットテストで実行してください。
+After starting the server in Eclipse or console, please execute each verification method of `SampleClient` under the test package as a unit test.
 
-##### 顧客向けユースケース
+##### Customer Use Cases
 
-| URL                              | 処理                 | 実行引数 |
-| -------------------------------- | ------------------- | ------------- |
-| `/api/asset/cio/withdraw`        | 振込出金依頼          | [`accountId`: sample, `currency`: JPY, `absAmount`: 依頼金額] |
-| `/api/asset/cio/unprocessedOut/` | 振込出金依頼未処理検索 | -       |
+| URL                              | Processing           | Execution Arguments |
+| -------------------------------- | ------------------- | ------------------- |
+| `/api/asset/cio/withdraw`        | Wire transfer withdrawal request | [`accountId`: sample, `currency`: JPY, `absAmount`: request amount] |
+| `/api/asset/cio/unprocessedOut/` | Wire transfer withdrawal unprocessed search | - |
 
-*※振込出金依頼はPOST、それ以外はGET*
+*※Wire transfer withdrawal request is POST, others are GET*
 
-##### 社内向けユースケース
+##### Internal Use Cases
 
-| URL                     | 処理             | 実行引数                                           |
-| ----------------------- | --------------- | ------------------------------------------------- |
-| `/api/admin/asset/cio/` | 振込入出金依頼検索 | [`updFromDay`: yyyy-MM-dd, `updToDay`: yyyy-MM-dd]|
+| URL                     | Processing                    | Execution Arguments                               |
+| ----------------------- | ----------------------------- | ------------------------------------------------- |
+| `/api/admin/asset/cio/` | Wire transfer deposit/withdrawal request search | [`updFromDay`: yyyy-MM-dd, `updToDay`: yyyy-MM-dd] |
 
 *※GET*
 
-##### バッチ向けユースケース
+##### Batch Use Cases
 
-| URL                                     | 処理                                          | 実行引数 |
-| --------------------------------------- | --------------------------------------------- | ------ |
-| `/api/system/job/daily/processDay`      | 営業日を進める(単純日回しのみ)                    | -      |
-| `/api/system/job/daily/closingCashOut`  | 当営業日の出金依頼を締める                        | -      |
-| `/api/system/job/daily/realizeCashflow` | 入出金キャッシュフローを実現する(受渡日に残高へ反映) | -      |
+| URL                                     | Processing                                          | Execution Arguments |
+| --------------------------------------- | --------------------------------------------------- | ------------------- |
+| `/api/system/job/daily/processDay`      | Advance business day (simple day progression only) | -                   |
+| `/api/system/job/daily/closingCashOut`  | Close withdrawal requests for the current business day | -               |
+| `/api/system/job/daily/realizeCashflow` | Realize deposit/withdrawal cash flow (reflect to balance on settlement date) | - |
 
 *※POST*
 
-### 配布用jarの作成
+### Creating Distribution Jar
 
-Spring Boot では Executable Jar ( ライブラリや静的リソースなども内包する jar ) を作成する事で単一の配布ファイルでアプリケーションを実行することができます。
+With Spring Boot, you can run an application with a single distribution file by creating an Executable Jar (jar that includes libraries and static resources).
 
-1. コンソールから 「 gradlew build 」 を実行
-1. `build/libs` 直下に jar が出力されるので Java8 以降の実行環境へ配布
-1. 実行環境でコンソールから 「 java -jar xxx.jar 」 を実行して起動
+1. Execute "gradlew build" from the console
+1. A jar is output directly under `build/libs`, so distribute it to a Java8 or later execution environment
+1. Execute "java -jar xxx.jar" from the console in the execution environment to start
 
-> 実行引数に 「 --spring.profiles.active=[プロファイル名]」 を追加する事で application.yml の設定値をプロファイル単位に変更できます。
+> By adding "--spring.profiles.active=[profile name]" to the execution arguments, you can change the configuration values in application.yml by profile unit.
 
-### 依存ライブラリ
+### Dependent Libraries
 
-> 実際の詳細な定義は `build.gradle` を参照してください
+> Please refer to `build.gradle` for actual detailed definitions
 
-### 補足解説（インフラ層）
+### Supplementary Explanation (Infrastructure Layer)
 
-インフラ層の簡単な解説です。
+This is a brief explanation of the infrastructure layer.
 
-※より詳細な概要についてはコードに記載されているコメントを参照してください
+※For more detailed overview, please refer to the comments written in the code
 
-#### DB / トランザクション
+#### DB / Transaction
 
-`sample.context.orm` 直下。ドメイン実装をより Entity に寄せるための ORM サポート実装です。 Repository ( スキーマ単位で定義 ) にドメイン処理を記載しないアプローチのため、 Spring Boot が提供する JpaRepository は利用していません。  
-トランザクション定義はトラブルの種となるのでアプリケーション層でのみ許し、なるべく狭く限定した形で付与しています。単純な readOnly な処理のみ `@Transactional([Bean名称])` を利用してメソッド単位の対応を取ります。
+Under `sample.context.orm`. This is ORM support implementation to bring domain implementation closer to Entity. Since we take an approach that does not write domain processing in Repository (defined per schema unit), we do not use JpaRepository provided by Spring Boot.
+Transaction definitions can be a source of trouble, so they are only allowed in the application layer and are applied in a narrowly limited form as much as possible. For simple readOnly processing only, we take method-level response using `@Transactional([Bean name])`.
 
-スキーマは標準のビジネスロジック用途 ( `DefaultRepository` ) とシステム用途 ( `SystemRepository` ) の2種類を想定しています。 Entity 実装ではスキーマに依存させず、引数に渡す側 ( 主にアプリケーション層 ) で判断させます。
+We assume two types of schemas: standard business logic use (`DefaultRepository`) and system use (`SystemRepository`). In Entity implementation, we do not depend on the schema, but let the passing side (mainly the application layer) make the decision.
 
-> Spring Data JPA が提供する JpaRepository を利用することも可能です。 ( 標準で DefaultRepository が管理しているスキーマへ接続します )
+> It is also possible to use JpaRepository provided by Spring Data JPA. (It connects to the schema managed by DefaultRepository by default)
 
-#### 認証/認可
+#### Authentication/Authorization
 
-`sample.context.security` 直下。顧客 ( ROLE_USER ) / 社員 ( ROLE_ADMIN ) の 2 パターンを想定しています。それぞれのユーザ情報 ( UserDetails ) 提供手段は `sample.usecase.SecurityService` において定義しています。
+Under `sample.context.security`. We assume two patterns: customer (ROLE_USER) / employee (ROLE_ADMIN). The means of providing user information (UserDetails) for each is defined in `sample.usecase.SecurityService`.
 
-認証 / 認可の機能を有効にするには `application.yml` の `extension.security.auth.enabled` に `true` を設定してください ( 標準ではテスト用途にfalse ) 。顧客 / 社員それぞれ同一 VM での相乗りは考えていません。社員専用モードで起動する時は起動時のプロファイル切り替え等で `extension.security.auth.admin` を `true` に設定してください。
+To enable authentication/authorization functionality, set `true` to `extension.security.auth.enabled` in `application.yml` (false by default for testing purposes). We do not consider coexistence of customers/employees in the same VM. When starting in employee-only mode, set `extension.security.auth.admin` to `true` by switching profiles at startup, etc.
 
-#### 利用者監査
+#### User Audit
 
-`sample.context.audit` 直下。 「いつ」 「誰が」 「何をしたか」 の情報を顧客 /システムそれぞれの視点で取得します。アプリケーション層での利用を想定しています。ログインした `Actor` の種別 ( User / System ) によって書き出し先と情報を切り替えています。運用時に行動証跡を取る際に利用可能です。
+Under `sample.context.audit`. Obtains information about "when", "who", and "what was done" from both customer and system perspectives. Intended for use in the application layer. It switches the output destination and information according to the type of logged-in `Actor` (User/System). It can be used to obtain behavioral evidence during operation.
 
-#### 例外
+#### Exceptions
 
-汎用概念としてフィールド単位にスタックした例外を持つ `ValidationException` を提供します。  
-例外は末端の UI 層でまとめて処理します。具体的にはアプリケーション層、ドメイン層では用途別の実行時例外をそのまま上位に投げるだけとし、例外捕捉は `sample.controller.RestErrorAdvise` において AOP を用いた暗黙的差し込みを行っています。
+Provides `ValidationException` which has exceptions stacked per field as a general concept.
+Exceptions are handled collectively at the terminal UI layer. Specifically, the application layer and domain layer simply throw runtime exceptions for their respective purposes to the upper layer, and exception catching is performed through implicit insertion using AOP in `sample.controller.RestErrorAdvise`.
 
-#### 日付/日時
+#### Date/Time
 
-`sample.context.Timestamper` を経由して Java8 で追加された `time` ライブラリを利用します。休日等を考慮した営業日算出はドメイン概念が含まれるので `sample.model.BusinessDayHandler` で別途定義しています。
+Uses the `time` library added in Java8 via `sample.context.Timestamper`. Business day calculation considering holidays, etc. includes domain concepts, so it is separately defined in `sample.model.BusinessDayHandler`.
 
-#### キャッシング
+#### Caching
 
-`AccountService` 等で Spring が提供する @Cacheable を利用しています。 UI 層かアプリケーション層のどちらかに統一した方が良いですが、本サンプルではアプリケーション層だけ付与しています。 JPA のキャッシュ機構は Entity 内で必要となるケース以外では、利用しないことを推奨します。
+Uses @Cacheable provided by Spring in `AccountService`, etc. It would be better to unify either the UI layer or application layer, but in this sample, it is only applied to the application layer. It is recommended not to use JPA's cache mechanism except when needed within Entity.
 
-#### テスト
+#### Testing
 
-パターンとしては通常の JUnitテストと、 Hibernate だけに閉じたEntityテスト（基底クラスは `EntityTestSupport` ）の合計 2 パターンで考えます。  
+As patterns, we consider a total of 2 patterns: regular JUnit tests and Entity tests limited to Hibernate only (base class is `EntityTestSupport`).
 
-> Springのコンテナを利用したテストはコストが高くなりがちなので、ここではおこないません。
+> We do not perform tests using Spring containers here as they tend to be costly.
 
 ### License
 
-本サンプルのライセンスはコード含めて全て *MIT License* です。  
-Spring Boot を用いたプロジェクト立ち上げ時のベース実装サンプルとして気軽にご利用ください。
+The license for this sample, including all code, is *MIT License*.
+Please feel free to use it as a base implementation sample when starting up projects using Spring Boot.

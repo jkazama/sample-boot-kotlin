@@ -1,6 +1,8 @@
 ---
 spring:
-  profiles: test
+  config:
+    activate:
+      on-profile: test
 
 logging.config: classpath:logback.xml
 

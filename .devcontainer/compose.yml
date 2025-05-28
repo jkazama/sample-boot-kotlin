@@ -1,0 +1,13 @@
+services:
+  workspace-backend:
+    image: mcr.microsoft.com/vscode/devcontainers/java:21-jdk-bookworm
+    init: true
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - ..:/home/vscode/workspace:cached
+      - ~/.ssh:/home/vscode/.ssh
+    working_dir: /home/vscode/workspace
+    environment:
+      - GRADLE_OPTS=-Dorg.gradle.daemon=false

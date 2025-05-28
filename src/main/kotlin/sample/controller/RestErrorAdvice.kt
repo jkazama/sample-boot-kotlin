@@ -25,8 +25,8 @@ import sample.Warns
 import sample.context.actor.ActorSession
 import java.io.IOException
 import java.util.*
-import javax.persistence.EntityNotFoundException
-import javax.validation.ConstraintViolationException
+import jakarta.persistence.EntityNotFoundException
+import jakarta.validation.ConstraintViolationException
 
 /**
  * REST用の例外Map変換サポート。

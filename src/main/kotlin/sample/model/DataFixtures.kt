@@ -25,7 +25,7 @@ import sample.util.TimePoint
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 /**
  * データ生成用のサポートコンポーネント。

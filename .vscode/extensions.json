@@ -1,0 +1,18 @@
+{
+    "recommendations": [
+        "fwcd.kotlin",
+        "mathiasfrohlich.kotlin",
+        "vscjava.vscode-gradle",
+        "pivotal.vscode-spring-boot",
+        "pivotal.vscode-boot-dev-pack",
+        "vscjava.vscode-spring-boot-dashboard",
+        "richardwillis.vscode-gradle",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-json",
+        "EditorConfig.EditorConfig",
+        "mhutchie.git-graph",
+        "mikestead.dotenv",
+        "ms-vscode.test-adapter-converter",
+        "hbenl.vscode-test-explorer"
+    ]
+}

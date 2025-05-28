@@ -1,35 +1,30 @@
 package sample.context.orm
 
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityNotFoundException
+import jakarta.persistence.LockModeType
+import java.io.Serializable
+import java.util.*
 import org.springframework.beans.factory.ObjectProvider
 import sample.ErrorKeys
 import sample.ValidationException
 import sample.context.DomainHelper
 import sample.context.Entity
 import sample.context.Repository
-import java.io.Serializable
-import java.util.*
-import javax.persistence.EntityManager
-import javax.persistence.EntityNotFoundException
-import javax.persistence.LockModeType
 
 /**
- * JPA ( Hibernate ) の Repository 基底実装。
- * <p>本コンポーネントは Repository と Entity の 1-n 関係を実現するために SpringData の基盤を
- * 利用しない形で単純な ORM 実装を提供します。
- * <p>OrmRepository を継承して作成される Repository の粒度はデータソース単位となります。
+ * JPA ( Hibernate ) の Repository 基底実装。 <p>本コンポーネントは Repository と Entity の 1-n 関係を実現するために SpringData
+ * の基盤を 利用しない形で単純な ORM 実装を提供します。 <p>OrmRepository を継承して作成される Repository の粒度はデータソース単位となります。
  */
 abstract class OrmRepository(
         private val dh: ObjectProvider<DomainHelper>,
         private val interceptor: ObjectProvider<OrmInterceptor>
 ) : Repository {
 
-    /**
-     * 管理するEntityManagerを返します。
-     * 継承先で管理したいデータソースのEntityManagerを返してください。
-     */
+    /** 管理するEntityManagerを返します。 継承先で管理したいデータソースのEntityManagerを返してください。 */
     abstract fun em(): EntityManager
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun dh(): DomainHelper = dh.getObject()
 
     fun interceptor(): Optional<OrmInterceptor> {
@@ -49,24 +44,24 @@ abstract class OrmRepository(
         return OrmTemplate(em(), Optional.of(metadata))
     }
 
-    /** 指定したEntityクラスを軸にしたCriteriaを生成します。  */
+    /** 指定したEntityクラスを軸にしたCriteriaを生成します。 */
     fun <T : Entity> criteria(clazz: Class<T>): OrmCriteria<T> {
         return OrmCriteria.of(em(), clazz)
     }
 
-    /** 指定したEntityクラスにエイリアスを紐付けたCriteriaを生成します。  */
+    /** 指定したEntityクラスにエイリアスを紐付けたCriteriaを生成します。 */
     fun <T : Entity> criteria(clazz: Class<T>, alias: String): OrmCriteria<T> {
         return OrmCriteria.of(em(), clazz, alias)
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> get(clazz: Class<T>, id: Serializable): Optional<T> {
         val m = em().find(clazz, id)
         m?.hashCode() // force loading
         return Optional.ofNullable(m)
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> load(clazz: Class<T>, id: Serializable): T {
         try {
             val m = em().getReference(clazz, id)
@@ -75,47 +70,47 @@ abstract class OrmRepository(
         } catch (e: EntityNotFoundException) {
             throw ValidationException(ErrorKeys.EntityNotFound)
         }
-
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> loadForUpdate(clazz: Class<T>, id: Serializable): T {
-        val m = em().find(clazz, id, LockModeType.PESSIMISTIC_WRITE)
-                ?: throw ValidationException(ErrorKeys.EntityNotFound)
+        val m =
+                em().find(clazz, id, LockModeType.PESSIMISTIC_WRITE)
+                        ?: throw ValidationException(ErrorKeys.EntityNotFound)
         m.hashCode() // force loading
         return m
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> exists(clazz: Class<T>, id: Serializable): Boolean {
         return get(clazz, id).isPresent
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> findAll(clazz: Class<T>): List<T> {
         return tmpl().loadAll(clazz)
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> save(entity: T): T {
-        interceptor().ifPresent { it.touchForCreate(entity)}
+        interceptor().ifPresent { it.touchForCreate(entity) }
         em().persist(entity)
         return entity
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> saveOrUpdate(entity: T): T {
         interceptor().ifPresent { it.touchForUpdate(entity) }
         return em().merge(entity)
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> update(entity: T): T {
         interceptor().ifPresent { it.touchForUpdate(entity) }
         return em().merge(entity)
     }
 
-    /** {@inheritDoc}  */
+    /** {@inheritDoc} */
     override fun <T : Entity> delete(entity: T): T {
         em().remove(entity)
         return entity
@@ -136,14 +131,11 @@ abstract class OrmRepository(
      * セッションキャッシュ中の永続化されていないエンティティをDBと同期化した上でセッションキャッシュを初期化します。
      *
      * 大量の更新が発生するバッチ処理などでは暗黙的に保持されるセッションキャッシュがメモリを逼迫して
-     * 大きな問題を引き起こすケースが多々見られます。定期的に本処理を呼び出してセッションキャッシュの
-     * サイズを定量に維持するようにしてください。
+     * 大きな問題を引き起こすケースが多々見られます。定期的に本処理を呼び出してセッションキャッシュの サイズを定量に維持するようにしてください。
      */
     fun flushAndClear(): OrmRepository {
         em().flush()
         em().clear()
         return this
     }
-
-
 }

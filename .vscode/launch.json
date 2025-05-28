@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "kotlin",
+            "request": "launch",
+            "name": "Kotlin: Current File",
+            "mainClass": "${file}",
+            "projectRoot": "${workspaceFolder}",
+            "args": [],
+            "vmOptions": []
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot: Application",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "sample.Application",
+            "projectName": "sample-boot-kotlin",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot: Application (Debug)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "sample.Application",
+            "projectName": "sample-boot-kotlin",
+            "args": "",
+            "vmArgs": "-Dspring.profiles.active=local",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

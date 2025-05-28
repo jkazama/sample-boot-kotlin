@@ -1,21 +1,19 @@
 package sample.model.asset
 
-/**
- * 摘要定数インターフェース。
- */
+/** Remarks constants interface. */
 interface Remarks {
     companion object {
-        /** 振込入金  */
+        /** Wire transfer deposit */
         const val CashIn = "cashIn"
-        /** 振込入金(調整)  */
+        /** Wire transfer deposit (adjustment) */
         const val CashInAdjust = "cashInAdjust"
-        /** 振込入金(取消)  */
+        /** Wire transfer deposit (cancellation) */
         const val CashInCancel = "cashInCancel"
-        /** 振込出金  */
+        /** Wire transfer withdrawal */
         const val CashOut = "cashOut"
-        /** 振込出金(調整)  */
+        /** Wire transfer withdrawal (adjustment) */
         const val CashOutAdjust = "cashOutAdjust"
-        /** 振込出金(取消)  */
+        /** Wire transfer withdrawal (cancellation) */
         const val CashOutCancel = "cashOutCancel"
     }
 }

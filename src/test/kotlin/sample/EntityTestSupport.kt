@@ -17,8 +17,8 @@ import sample.model.DataFixtures
 import sample.support.MockDomainHelper
 import java.time.Clock
 import java.util.*
-import javax.persistence.EntityManager
-import javax.persistence.EntityManagerFactory
+import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityManagerFactory
 import javax.sql.DataSource
 
 

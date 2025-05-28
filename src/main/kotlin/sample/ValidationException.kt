@@ -3,11 +3,10 @@ package sample
 import java.io.Serializable
 
 /**
- * 審査例外を表現します。
- * <p>ValidationExceptionは入力例外や状態遷移例外等の復旧可能な審査例外です。
- * その性質上ログ等での出力はWARNレベル(ERRORでなく)で行われます。
- * <p>審査例外はグローバル/フィールドスコープで複数保有する事が可能です。複数件の例外を取り扱う際は
- * Warnsを利用して初期化してください。
+ * Represents validation exception. <p>ValidationException is a recoverable validation exception
+ * such as input exception or state transition exception. Due to its nature, output in logs is
+ * performed at WARN level (not ERROR). <p>Validation exceptions can be held in multiple
+ * global/field scopes. When handling multiple exceptions, please initialize using Warns.
  */
 class ValidationException : RuntimeException {
     val warns: Warns
@@ -18,7 +17,11 @@ class ValidationException : RuntimeException {
         this.warns = warns
     }
 
-    constructor(message: String, field: String? = null, messageArgs: Array<String> = arrayOf()) : super(message) {
+    constructor(
+            message: String,
+            field: String? = null,
+            messageArgs: Array<String> = arrayOf()
+    ) : super(message) {
         this.warns = Warns.init(message, field, messageArgs)
     }
 
@@ -40,7 +43,11 @@ class Warns(val list: MutableList<Warn> = mutableListOf()) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1
 
-        fun init(message: String? = null, field: String? = null, messageArgs: Array<String> = arrayOf()): Warns =
+        fun init(
+                message: String? = null,
+                field: String? = null,
+                messageArgs: Array<String> = arrayOf()
+        ): Warns =
                 when {
                     message.isNullOrBlank() -> Warns()
                     else -> Warns().add(message.orEmpty(), field, messageArgs)
@@ -49,13 +56,14 @@ class Warns(val list: MutableList<Warn> = mutableListOf()) : Serializable {
 }
 
 class Warn(
-        /** 審査例外メッセージ  */
+        /** Validation exception message */
         val message: String,
-        /** 審査例外フィールドキー  */
+        /** Validation exception field key */
         val field: String? = null,
-        /** 審査例外メッセージ引数  */
-        val messageArgs: Array<String> = arrayOf()) : Serializable {
-    /** フィールドに従属しないグローバル例外時はtrue  */
+        /** Validation exception message arguments */
+        val messageArgs: Array<String> = arrayOf()
+) : Serializable {
+    /** True when global exception not dependent on field */
     val global: Boolean = field.isNullOrBlank()
 
     companion object {
@@ -63,24 +71,24 @@ class Warn(
     }
 }
 
-/** 審査例外で用いるメッセージキー定数  */
+/** Message key constants used in validation exceptions */
 interface ErrorKeys {
     companion object {
-        /** サーバー側で問題が発生した可能性があります  */
+        /** A problem may have occurred on the server side */
         const val Exception = "error.Exception"
-        /** 情報が見つかりませんでした  */
+        /** Information was not found */
         const val EntityNotFound = "error.EntityNotFoundException"
-        /** ログイン状態が有効ではありません  */
+        /** Login status is not valid */
         const val Authentication = "error.Authentication"
-        /** 対象機能の利用が認められていません  */
+        /** Use of the target function is not permitted */
         const val AccessDenied = "error.AccessDeniedException"
 
-        /** ログインに失敗しました  */
+        /** Login failed */
         const val Login = "error.login"
-        /** 既に登録されているIDです  */
+        /** This ID is already registered */
         const val DuplicateId = "error.duplicateId"
 
-        /** 既に処理済の情報です  */
+        /** This information has already been processed */
         const val ActionUnprocessing = "error.ActionStatusType.unprocessing"
     }
 }

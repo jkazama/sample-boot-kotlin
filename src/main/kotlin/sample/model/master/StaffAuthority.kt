@@ -4,9 +4,9 @@ import sample.context.orm.OrmActiveRecord
 import sample.context.orm.OrmRepository
 import sample.model.constraints.IdStr
 import sample.model.constraints.Name
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.Id
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.Id
 
 
 /**

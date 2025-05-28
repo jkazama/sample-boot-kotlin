@@ -8,13 +8,11 @@ import sample.controller.AccountController
 import sample.usecase.AccountService
 
 /**
- * アプリケーションプロセスの起動クラス。
- * <p>本クラスを実行する事でSpringBootが提供する組込Tomcatでのアプリケーション起動が行われます。
- * <p>controller / usecase パッケージ配下のみコンポーネントスキャンをおこないます。
+ * Application process startup class. <p>By executing this class, the application startup with the
+ * embedded Tomcat provided by SpringBoot is performed. <p>Component scanning is performed only
+ * under the controller / usecase packages.
  */
-@SpringBootApplication(scanBasePackageClasses = [
-    AccountController::class, AccountService::class
-])
+@SpringBootApplication(scanBasePackageClasses = [AccountController::class, AccountService::class])
 @EnableCaching(proxyTargetClass = true)
 @Import(ApplicationConfig::class, ApplicationDbConfig::class, ApplicationSecurityConfig::class)
 class Application
